@@ -1,0 +1,12 @@
+# 비밀·빌드 산출물 — 절대 커밋 금지
+.env
+.env.*
+!.env.example
+.vercel
+node_modules
+.env*
+
+# 운영 상태 (재생성 가능, 매 세션 변함)
+.omc/
+**/.omc/
+.DS_Store

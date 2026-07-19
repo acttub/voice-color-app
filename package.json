@@ -1,0 +1,7 @@
+{
+  "name": "voice-color-app",
+  "version": "0.2.0",
+  "private": true,
+  "description": "보이스 컬러 — 녹음으로 목소리 16색 찾기 (Vercel 무료 배포)",
+  "engines": { "node": ">=18" }
+}

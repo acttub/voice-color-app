@@ -1,0 +1,14 @@
+{
+  "name": "보이스 컬러",
+  "short_name": "보이스 컬러",
+  "description": "30초 녹음하면 네 목소리를 16가지 색 중 하나로 찾아줘. 점수도 판정도 없이.",
+  "lang": "ko",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f2f4f6",
+  "theme_color": "#f2f4f6",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
