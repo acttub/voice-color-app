@@ -82,9 +82,10 @@
   /* 시작 전에는 0.0s·빈 게이지가 뜻이 없다. 자리는 잡아둬 시작 순간 화면이 안 튀게. */
   .idle{visibility:hidden}
   .spin{text-align:center;padding:40px 0}
-  .spin .dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--accent);margin:0 4px;animation:b 1s infinite ease-in-out}
-  .spin .dot:nth-child(2){animation-delay:.15s}.spin .dot:nth-child(3){animation-delay:.3s}
-  @keyframes b{0%,80%,100%{transform:scale(.6);opacity:.4}40%{transform:scale(1);opacity:1}}
+  /* brand/DESIGN.md 기다림 규칙: 불투명도만 1.2s 주기로. 크기 변화(scale)로 표현하지 않는다. */
+  .spin .dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--accent);margin:0 4px;animation:b 1.2s infinite ease-in-out}
+  .spin .dot:nth-child(2){animation-delay:.18s}.spin .dot:nth-child(3){animation-delay:.36s}
+  @keyframes b{0%,80%,100%{opacity:.28}40%{opacity:1}}
   .card__emoji{font-size:40px;line-height:1;margin-bottom:12px}
   .axis{display:inline-flex;border-radius:9999px;font-size:12px;font-weight:600;padding:4px 10px;background:var(--accent-soft);color:var(--accent);margin-bottom:12px}
   .series{font-size:15px;font-weight:600;color:var(--ink-3);margin:0 0 4px}
@@ -475,18 +476,18 @@ function saveImage(){
     ctx.font='96px '+FONT; if(draw){ctx.fillStyle='#191f28';ctx.fillText(s.emoji,ix,y);} y+=60;
     ctx.font='600 32px '+FONT; var aw=ctx.measureText(s.axis).width;
     if(draw){ rrect(ctx,ix,y-38,aw+44,54,27); ctx.fillStyle='#e8f3ff'; ctx.fill();
-      ctx.fillStyle='#3182f6'; ctx.fillText(s.axis,ix+22,y); } y+=64;
-    y=tblock(ctx,s.name,ix,y,maxW,36,'600','#8b95a1',48,draw); y+=6;
+      ctx.fillStyle='#0355f1'; ctx.fillText(s.axis,ix+22,y); } y+=64;
+    y=tblock(ctx,s.name,ix,y,maxW,36,'600','#6b7684',48,draw); y+=6;
     y=tblock(ctx,s.catch,ix,y,maxW,58,'700','#191f28',76,draw); y+=22;
-    y=tblock(ctx,s.desc,ix,y,maxW,38,'400','#4e5968',58,draw); y+=34;
-    y=tblock(ctx,'이런 자리에서 빛나',ix,y,maxW,29,'600','#8b95a1',40,draw); y+=18;
+    y=tblock(ctx,s.desc,ix,y,maxW,38,'500','#4e5968',58,draw); y+=34;
+    y=tblock(ctx,'이런 자리에서 빛나',ix,y,maxW,29,'600','#6b7684',40,draw); y+=18;
     y=tchips(ctx,s.chips,ix,y,maxW,draw); y+=6;
-    y=tblock(ctx,lastSpoon,ix,y,maxW,31,'400','#8b95a1',46,draw); y+=32;
+    y=tblock(ctx,lastSpoon,ix,y,maxW,31,'500','#6b7684',46,draw); y+=32;
     if(draw){ ctx.strokeStyle='#e5e8eb'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(ix,y); ctx.lineTo(CW-ix,y); ctx.stroke(); } y+=46;
     y=tblock(ctx,'색은 타고난 것. 그 색으로 무슨 생각을 실을지는 연습이야.',ix,y,maxW,35,'600','#191f28',52,draw); y+=40;
-    y=tblock(ctx,'acttub · 보이스 컬러',ix,y,maxW,29,'600','#8b95a1',40,draw);
+    y=tblock(ctx,'acttub · 보이스 컬러',ix,y,maxW,29,'600','#6b7684',40,draw);
     ctx.font='600 28px '+FONT;
-    if(draw){ ctx.fillStyle='#3182f6'; ctx.fillText('voice.acttub.com', ix, y+2); }
+    if(draw){ ctx.fillStyle='#0355f1'; ctx.fillText('voice.acttub.com', ix, y+2); }
     return y+38;
   }
   var probe=document.createElement('canvas').getContext('2d');
