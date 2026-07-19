@@ -31,41 +31,47 @@
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="manifest" href="/manifest.webmanifest">
-<meta name="color-scheme" content="light dark">
-<meta name="theme-color" content="#f2f4f6" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#101318" media="(prefers-color-scheme: dark)">
+<!-- brand/DESIGN.md: 테마는 라이트 온리. 다크 팔레트를 임의로 발명하지 않는다.
+     다크가 채택되면 DESIGN.md에 토큰으로 먼저 추가된 뒤 여기로 내려온다. -->
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#f2f4f6">
 <style>
   :root {
     --bg:#f2f4f6; --surface:#fff; --surface-sub:#f9fafb;
-    --ink:#191f28; --ink-2:#4e5968; --ink-3:#8b95a1; --line:#e5e8eb;
-    --accent:#3182f6; --accent-soft:#e8f3ff; --bad:#f04452;
+    --ink:#191f28; --ink-2:#4e5968; --ink-3:#6b7684; --line:#e5e8eb;
+    /* brand/DESIGN.md: primary-strong = 버튼 면, primary = 링크·표식 */
+    --accent:#0355f1; --accent-deep:#0243c4; --accent-mark:#0a79fb;
+    --accent-soft:#e8f3ff; --accent-soft-hover:#d8ebff; --bad:#f04452;
     --shadow:0 2px 8px rgba(0,0,0,.08);
   }
-  @media (prefers-color-scheme:dark){:root{
-    --bg:#101318; --surface:#1b1f27; --surface-sub:#232834;
-    --ink:#eceef1; --ink-2:#a8b0bc; --ink-3:#6b7684; --line:#2b313c;
-    --accent:#4e93f8; --accent-soft:#1c2b45; --bad:#f36672; --shadow:none;
-  }}
   *{box-sizing:border-box}
   body{background:var(--bg);color:var(--ink);margin:0;padding:48px 20px 80px;
     font-family:"Pretendard Variable",Pretendard,"Apple SD Gothic Neo","Noto Sans KR",-apple-system,sans-serif;
     font-size:15px;line-height:1.6}
   .wrap{max-width:480px;margin:0 auto}
   .screen{display:none}.screen.on{display:block}
-  h1{font-size:28px;font-weight:700;letter-spacing:-.02em;line-height:1.34;margin:0 0 12px}
-  .lead{color:var(--ink-2);margin:0 0 4px}
+  h1{font-size:28px;font-weight:700;letter-spacing:-.02em;line-height:1.34;margin:0 0 12px;word-break:keep-all}
+  .lead{color:var(--ink-2);margin:0 0 4px;word-break:keep-all}
   .note{color:var(--ink-3);font-size:13px;margin:16px 0 0}
-  .step{font-size:13px;font-weight:600;color:var(--accent);margin:0 0 12px}
-  .hint{font-size:13px;color:var(--ink-3);margin:10px 0 0;line-height:1.5}
-  .eyebrow{font-size:13px;font-weight:600;color:var(--accent);margin:0 0 12px}
+  .step{font-size:13px;font-weight:600;color:var(--accent-mark);margin:0 0 12px}
+  .hint{font-size:13px;color:var(--ink-3);margin:10px 0 0;line-height:1.5;word-break:keep-all}
+  .eyebrow{font-size:13px;font-weight:600;color:var(--accent-mark);margin:0 0 12px}
   .sub{color:var(--ink-3);font-size:14px;margin:8px 0 0}
   .card{background:var(--surface);border-radius:16px;padding:26px 22px;box-shadow:var(--shadow)}
   .btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
     background:var(--accent);color:#fff;border:0;border-radius:12px;font-family:inherit;
-    font-size:16px;font-weight:600;padding:15px 20px;cursor:pointer;text-decoration:none}
-  .btn:disabled{opacity:.5;cursor:default}
+    font-size:16px;font-weight:600;padding:15px 20px;cursor:pointer;text-decoration:none;
+    transition:background-color .1s ease-out,transform .1s ease-out}
+  .btn:hover{background:var(--accent-deep)}
+  .btn:active{background:var(--accent-deep);transform:scale(.98)}
+  .btn:disabled{opacity:.4;pointer-events:none}
+  /* 결과 화면의 고강조 액션은 CTA 하나뿐 — 저장/다시하기는 보조 단계로 내린다 */
+  .btn.second{background:var(--accent-soft);color:var(--accent)}
+  .btn.second:hover,.btn.second:active{background:var(--accent-soft-hover);color:var(--accent)}
   .btn.ghost{background:var(--surface-sub);color:var(--ink-2)}
+  .btn.ghost:hover,.btn.ghost:active{background:var(--line);color:var(--ink-2)}
   .btn+.btn{margin-top:10px}
+  :focus-visible{outline:2px solid var(--accent-mark);outline-offset:2px;border-radius:12px}
   .prompt-box{background:var(--surface-sub);border-radius:12px;padding:18px;margin:0 0 20px}
   .prompt-box .q{font-size:13px;color:var(--ink-3);margin:0 0 6px}
   .prompt-box .s{font-size:18px;font-weight:600;letter-spacing:-.01em;margin:0}
@@ -73,6 +79,8 @@
   .meter>i{display:block;height:100%;width:0%;background:var(--accent);transition:width .08s linear}
   .timer{text-align:center;font-size:34px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.02em;margin:8px 0 20px}
   .err{color:var(--bad);font-size:13px;margin:12px 0 0}
+  /* 시작 전에는 0.0s·빈 게이지가 뜻이 없다. 자리는 잡아둬 시작 순간 화면이 안 튀게. */
+  .idle{visibility:hidden}
   .spin{text-align:center;padding:40px 0}
   .spin .dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--accent);margin:0 4px;animation:b 1s infinite ease-in-out}
   .spin .dot:nth-child(2){animation-delay:.15s}.spin .dot:nth-child(3){animation-delay:.3s}
@@ -80,25 +88,33 @@
   .card__emoji{font-size:40px;line-height:1;margin-bottom:12px}
   .axis{display:inline-flex;border-radius:9999px;font-size:12px;font-weight:600;padding:4px 10px;background:var(--accent-soft);color:var(--accent);margin-bottom:12px}
   .series{font-size:15px;font-weight:600;color:var(--ink-3);margin:0 0 4px}
-  .catch{font-size:22px;font-weight:700;letter-spacing:-.02em;line-height:1.36;margin:0 0 14px}
-  .desc{color:var(--ink-2);margin:0 0 18px}
+  .catch{font-size:22px;font-weight:700;letter-spacing:-.02em;line-height:1.36;margin:0 0 14px;word-break:keep-all}
+  .desc{color:var(--ink-2);margin:0 0 18px;word-break:keep-all}
   .shine-label{font-size:13px;font-weight:600;color:var(--ink-3);margin:0 0 10px}
   .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
   .chip{display:inline-flex;border-radius:9999px;font-size:13px;font-weight:600;padding:7px 14px;background:var(--surface-sub);color:var(--ink-2)}
   .spoon{font-size:13px;color:var(--ink-3);margin:0}
   .divider{height:1px;background:var(--line);margin:20px 0;border:0}
-  .bridge{font-size:14px;color:var(--ink);font-weight:600;margin:0 0 14px}
-  .caption{background:var(--surface-sub);border-radius:12px;padding:12px 14px;font-size:13px;color:var(--ink-3);margin-top:14px}
+  .bridge{font-size:14px;color:var(--ink);font-weight:600;margin:0 0 14px;word-break:keep-all}
+  .caption{background:var(--surface-sub);border-radius:12px;padding:12px 14px;font-size:13px;color:var(--ink-3);margin:0;word-break:keep-all}
   .caption b{color:var(--ink-2);font-weight:600}
-  .ask{margin-top:28px;text-align:center}
+  /* CTA 다음에 오는 확인 문항 — 버튼 더미로 안 읽히게 hairline으로 끊는다 */
+  .ask{margin-top:32px;padding-top:24px;border-top:1px solid var(--line);text-align:center}
   .ask__q{font-size:14px;color:var(--ink-3);margin:0 0 12px}
   .ask__row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
-  .ask__btn{background:var(--surface-sub);border:0;border-radius:12px;padding:10px 14px;
+  /* 폰에서 누르는 버튼이라 최소 44px 높이를 지킨다 */
+  .ask__btn{background:var(--surface-sub);border:0;border-radius:12px;padding:13px 16px;min-height:44px;
     font-size:13px;color:var(--ink-2);font-weight:600;cursor:pointer;font-family:inherit}
-  .ask__btn:active{opacity:.7}
-  .ask__skip{background:none;border:0;color:var(--ink-3);font-size:12px;margin-top:10px;
-    cursor:pointer;text-decoration:underline;font-family:inherit}
-  .ask__done{text-align:center;font-size:13px;color:var(--ink-3);margin-top:28px}
+  .ask__btn{transition:background-color .1s ease-out,transform .1s ease-out}
+  .ask__btn:hover{background:var(--line)}
+  .ask__btn:active{background:var(--line);transform:scale(.98)}
+  .ask__skip{background:none;border:0;color:var(--ink-3);font-size:12px;margin-top:4px;
+    padding:14px 16px;min-height:44px;cursor:pointer;text-decoration:underline;font-family:inherit}
+  .ask__done{text-align:center;font-size:13px;color:var(--ink-3);margin-top:32px;padding-top:24px;border-top:1px solid var(--line)}
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;
+      transition-duration:.01ms!important}
+  }
 </style>
 </head>
 <body>
@@ -116,8 +132,8 @@
     <p class="step">🎙️ 30초 녹음 · 목소리 색을 찾는 중</p>
     <div class="prompt-box"><p class="q">이 문장을 소리 내어 읽어줘</p><p class="s" id="prompt-sentence">—</p></div>
     <p class="hint">내용은 상관없어 — <b>목소리만</b> 들어. 편하게 한 문장 읽으면 돼. (녹음은 저장 안 해)</p>
-    <div class="timer" id="timer">0.0s</div>
-    <div class="meter"><i id="level"></i></div>
+    <div class="timer idle" id="timer">0.0s</div>
+    <div class="meter idle" id="meter"><i id="level"></i></div>
     <div style="height:20px"></div>
     <button class="btn" id="rec-toggle">녹음 시작</button>
     <button class="btn ghost" id="rec-back">뒤로</button>
@@ -140,13 +156,14 @@
       <p class="shine-label">이런 자리에서 빛나</p>
       <div class="chips" id="r-chips"></div>
       <p class="spoon" id="r-spoon"></p>
+      <div style="height:16px"></div>
+      <div class="caption"><b>공유 캡션</b> · <span id="r-caption">—</span></div>
       <hr class="divider">
       <p class="bridge">색은 타고난 것. 그 색으로 무슨 생각을 실을지는 연습이야.</p>
       <a class="btn" id="cta" href="https://acttub.com/?utm_source=voice-color&utm_medium=result_card&utm_campaign=voice2act" target="_blank" rel="noopener">acttub에서 무료로 질문 연습 시작 →</a>
-      <div class="caption"><b>공유 캡션</b> · <span id="r-caption">—</span></div>
     </div>
     <div style="height:14px"></div>
-    <button class="btn" id="r-save">이미지로 저장</button>
+    <button class="btn second" id="r-save">이미지로 저장</button>
     <button class="btn ghost" id="r-again">다시 하기</button>
 
     <div class="ask" id="ask-face">
@@ -273,7 +290,8 @@ var lastKey=null, lastSpoon="";  // 저장 이미지용 마지막 결과
 var CTA_BASE='https://acttub.com/?utm_source=voice-color&utm_medium=result_card&utm_campaign=voice2act';
 
 function show(id){var xs=document.querySelectorAll('.screen');for(var i=0;i<xs.length;i++)xs[i].classList.remove('on');document.getElementById(id).classList.add('on');}
-function log(ev){ try{ fetch('/api/event',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({event:ev})}); }catch(e){} }
+// 계측 실패가 사용자 흐름을 건드리면 안 된다 — try/catch는 async 거부를 못 잡으므로 .catch도 단다
+function log(ev){ try{ fetch('/api/event',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({event:ev})}).catch(function(){}); }catch(e){} }
 
 // 결과 보관 — 새로고침·뒤로가기로 카드가 날아가지 않게. 열거형 3개 + 문항 응답 여부만 담는다(음원·개인정보 없음).
 var STORE_KEY='vc_last', STORE_TTL=6*60*60*1000;  // 6시간 지나면 새로 하는 게 맞다
@@ -296,6 +314,7 @@ function clearLast(){ try{ localStorage.removeItem(STORE_KEY); }catch(e){} }
 var stream=null,audioCtx=null,analyser=null,timeBuf=null,rafId=null,recTimer=null;
 var recorder=null,chunks=[],recording=false,elapsed=0;
 var pitchTimer=null, pitches=[];
+var MIN_SEC=3;  // 이보다 짧으면 피치 표본도 파일 크기도 모자란다
 function median(a){ if(!a.length) return NaN; var b=a.slice().sort(function(x,y){return x-y;}); var m=b.length>>1; return b.length%2?b[m]:(b[m-1]+b[m])/2; }
 function autoCorrelate(buf,sr){
   var SIZE=buf.length,rms=0,i,j;
@@ -330,19 +349,40 @@ async function startRecording(){
   recorder.onstop=onRecordingStop;
   recorder.start();
   recording=true;elapsed=0;
-  document.getElementById('rec-toggle').textContent='녹음 끝내기';
+  var tog=document.getElementById('rec-toggle');
+  tog.textContent='녹음 끝내기';
+  document.getElementById('timer').classList.remove('idle');
+  document.getElementById('meter').classList.remove('idle');
+  // 1초짜리 녹음은 분석이 실패한다 — 실패 메시지 대신 MIN_SEC 동안 끝내기를 잠근다
+  tog.disabled=true;
   drawLevel(); pitchTimer=setInterval(samplePitch,80);
-  recTimer=setInterval(function(){elapsed+=0.1;document.getElementById('timer').textContent=elapsed.toFixed(1)+'s';if(elapsed>=30)stopRecording();},100);
+  recTimer=setInterval(function(){
+    elapsed+=0.1;
+    document.getElementById('timer').textContent=elapsed.toFixed(1)+'s';
+    if(tog.disabled&&elapsed>=MIN_SEC) tog.disabled=false;
+    if(elapsed>=30)stopRecording();
+  },100);
 }
 function stopRecording(){ if(!recording)return; recording=false; if(recorder&&recorder.state!=='inactive')recorder.stop(); }
+// 녹음 중 '뒤로'를 눌렀을 때 트랙 종료가 recorder.onstop을 깨워 분석 화면으로 튀는 걸 막는다
+function abortRecording(){
+  recording=false;
+  if(recorder){ recorder.onstop=null; if(recorder.state!=='inactive')recorder.stop(); recorder=null; }
+  chunks=[]; teardown();
+  document.getElementById('timer').textContent='0.0s';
+  document.getElementById('rec-err').textContent='';
+}
 function teardown(){
   if(pitchTimer){clearInterval(pitchTimer);pitchTimer=null;}
   if(recTimer){clearInterval(recTimer);recTimer=null;}
   if(rafId){cancelAnimationFrame(rafId);rafId=null;}
   if(stream){stream.getTracks().forEach(function(t){t.stop();});stream=null;}
   if(audioCtx){audioCtx.close();audioCtx=null;} analyser=null;
-  document.getElementById('rec-toggle').textContent='녹음 시작';
+  var tog=document.getElementById('rec-toggle');
+  tog.textContent='녹음 시작'; tog.disabled=false;
   document.getElementById('level').style.width='0%';
+  document.getElementById('timer').classList.add('idle');
+  document.getElementById('meter').classList.add('idle');
 }
 function blobToBase64(blob){
   return new Promise(function(resolve,reject){
@@ -464,7 +504,7 @@ document.getElementById('go-record').addEventListener('click',function(){
   log('record_open'); show('s-record');
 });
 document.getElementById('rec-toggle').addEventListener('click',function(){ if(recording)stopRecording();else startRecording(); });
-document.getElementById('rec-back').addEventListener('click',function(){ teardown(); show('s-landing'); });
+document.getElementById('rec-back').addEventListener('click',function(){ abortRecording(); show('s-landing'); });
 document.getElementById('r-again').addEventListener('click',function(){
   document.getElementById('timer').textContent='0.0s';
   clearLast(); resetAsk(); show('s-landing');
