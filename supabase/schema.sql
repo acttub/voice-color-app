@@ -6,7 +6,10 @@
 create table if not exists voice_events (
   id         bigint generated always as identity primary key,
   created_at timestamptz not null default now(),
-  event      text not null   -- record_open | analyze_start | result_velvet|noir|sunshine|crystal | cta_click | share_save
+  event      text not null
+  -- landing_view | record_open | analyze_start | analyze_fail
+  -- | result_view (카드 노출 = 공유율·완주율의 분모) | result_<계열키> (16색 쏠림)
+  -- | share_save | cta_click | face_yes|face_no|face_skip (외모→목소리 이동 확인 문항)
 );
 
 create index if not exists idx_events_created on voice_events (created_at);

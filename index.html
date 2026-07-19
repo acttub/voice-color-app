@@ -90,6 +90,15 @@
   .bridge{font-size:14px;color:var(--ink);font-weight:600;margin:0 0 14px}
   .caption{background:var(--surface-sub);border-radius:12px;padding:12px 14px;font-size:13px;color:var(--ink-3);margin-top:14px}
   .caption b{color:var(--ink-2);font-weight:600}
+  .ask{margin-top:28px;text-align:center}
+  .ask__q{font-size:14px;color:var(--ink-3);margin:0 0 12px}
+  .ask__row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+  .ask__btn{background:var(--surface-sub);border:0;border-radius:12px;padding:10px 14px;
+    font-size:13px;color:var(--ink-2);font-weight:600;cursor:pointer;font-family:inherit}
+  .ask__btn:active{opacity:.7}
+  .ask__skip{background:none;border:0;color:var(--ink-3);font-size:12px;margin-top:10px;
+    cursor:pointer;text-decoration:underline;font-family:inherit}
+  .ask__done{text-align:center;font-size:13px;color:var(--ink-3);margin-top:28px}
 </style>
 </head>
 <body>
@@ -139,6 +148,16 @@
     <div style="height:14px"></div>
     <button class="btn" id="r-save">이미지로 저장</button>
     <button class="btn ghost" id="r-again">다시 하기</button>
+
+    <div class="ask" id="ask-face">
+      <p class="ask__q">이거 하는 동안 얼굴이나 외모가 신경 쓰였어?</p>
+      <div class="ask__row">
+        <button class="ask__btn" data-ans="yes">응, 신경 쓰였어</button>
+        <button class="ask__btn" data-ans="no">아니, 목소리만 생각했어</button>
+      </div>
+      <button class="ask__skip" data-ans="skip">건너뛸게</button>
+    </div>
+    <p class="ask__done" id="ask-done" hidden>고마워 🙏</p>
   </section>
 </div>
 
@@ -255,6 +274,24 @@ var lastKey=null, lastSpoon="";  // 저장 이미지용 마지막 결과
 function show(id){var xs=document.querySelectorAll('.screen');for(var i=0;i<xs.length;i++)xs[i].classList.remove('on');document.getElementById(id).classList.add('on');}
 function log(ev){ try{ fetch('/api/event',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({event:ev})}); }catch(e){} }
 
+// 결과 보관 — 새로고침·뒤로가기로 카드가 날아가지 않게. 열거형 3개 + 문항 응답 여부만 담는다(음원·개인정보 없음).
+var STORE_KEY='vc_last', STORE_TTL=6*60*60*1000;  // 6시간 지나면 새로 하는 게 맞다
+function saveLast(data,answered){
+  try{ localStorage.setItem(STORE_KEY,JSON.stringify({
+    series:data.series, region:data.region, tempo:data.tempo,
+    answered:!!answered, ts:Date.now()
+  })); }catch(e){}
+}
+function loadLast(){
+  try{
+    var raw=localStorage.getItem(STORE_KEY); if(!raw) return null;
+    var d=JSON.parse(raw);
+    if(!d||!SERIES[d.series]||!d.ts||Date.now()-d.ts>STORE_TTL){ clearLast(); return null; }
+    return d;
+  }catch(e){ return null; }
+}
+function clearLast(){ try{ localStorage.removeItem(STORE_KEY); }catch(e){} }
+
 var stream=null,audioCtx=null,analyser=null,timeBuf=null,rafId=null,recTimer=null;
 var recorder=null,chunks=[],recording=false,elapsed=0;
 var pitchTimer=null, pitches=[];
@@ -326,8 +363,10 @@ async function onRecordingStop(){
     if(!r.ok) throw new Error('http '+r.status);
     var data=await r.json();
     if(!SERIES[data.series]) throw new Error('bad series');
-    renderResult(data); log('result_'+data.series);
+    renderResult(data); saveLast(data,false);
+    log('result_view'); log('result_'+data.series);
   }catch(e){
+    log('analyze_fail');
     show('s-record');
     document.getElementById('rec-err').textContent='분석에 실패했어. 잠깐 뒤 다시 해줘.';
     document.getElementById('timer').textContent='0.0s';
@@ -422,9 +461,36 @@ document.getElementById('go-record').addEventListener('click',function(){
 });
 document.getElementById('rec-toggle').addEventListener('click',function(){ if(recording)stopRecording();else startRecording(); });
 document.getElementById('rec-back').addEventListener('click',function(){ teardown(); show('s-landing'); });
-document.getElementById('r-again').addEventListener('click',function(){ document.getElementById('timer').textContent='0.0s'; show('s-landing'); });
+document.getElementById('r-again').addEventListener('click',function(){
+  document.getElementById('timer').textContent='0.0s';
+  clearLast(); resetAsk(); show('s-landing');
+});
 document.getElementById('r-save').addEventListener('click',saveImage);
 document.getElementById('cta').addEventListener('click',function(){ log('cta_click'); });
+
+// 얼굴 대신 목소리 — 만든 이유가 됐는지 확인하는 한 줄. 건너뛸 수 있다.
+function resetAsk(){
+  document.getElementById('ask-face').hidden=false;
+  document.getElementById('ask-done').hidden=true;
+}
+function closeAsk(ans){
+  document.getElementById('ask-face').hidden=true;
+  if(ans!=='skip') document.getElementById('ask-done').hidden=false;
+  log('face_'+ans);
+  var d=loadLast(); if(d) saveLast(d,true);
+}
+var askBtns=document.querySelectorAll('#ask-face [data-ans]');
+for(var ai=0;ai<askBtns.length;ai++){
+  askBtns[ai].addEventListener('click',function(){ closeAsk(this.getAttribute('data-ans')); });
+}
+
+// 진입 계측 + 직전 결과 복원 (복원은 result_view로 세지 않는다 — 공유율 분모가 부풀지 않게)
+log('landing_view');
+(function restore(){
+  var d=loadLast(); if(!d) return;
+  renderResult(d);
+  if(d.answered){ document.getElementById('ask-face').hidden=true; }
+})();
 </script>
 </body>
 </html>
