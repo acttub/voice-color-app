@@ -270,6 +270,7 @@ function pickSentence(){
   lastSentence=s; return s;
 }
 var lastKey=null, lastSpoon="";  // 저장 이미지용 마지막 결과
+var CTA_BASE='https://acttub.com/?utm_source=voice-color&utm_medium=result_card&utm_campaign=voice2act';
 
 function show(id){var xs=document.querySelectorAll('.screen');for(var i=0;i<xs.length;i++)xs[i].classList.remove('on');document.getElementById(id).classList.add('on');}
 function log(ev){ try{ fetch('/api/event',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({event:ev})}); }catch(e){} }
@@ -388,6 +389,9 @@ function renderResult(data){
   lastSpoon=spoon;
   document.getElementById('r-spoon').textContent=spoon;
   document.getElementById('r-caption').textContent=s.caption+' → voice.acttub.com';
+  // 어떤 색이 가입으로 이어지는지 acttub 쪽에서 분해할 수 있게 계열을 UTM에 싣는다
+  var cta=document.getElementById('cta');
+  cta.href=CTA_BASE+'&utm_content='+encodeURIComponent(data.series);
   show('s-result');
 }
 var FONT='"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif';
@@ -466,7 +470,11 @@ document.getElementById('r-again').addEventListener('click',function(){
   clearLast(); resetAsk(); show('s-landing');
 });
 document.getElementById('r-save').addEventListener('click',saveImage);
-document.getElementById('cta').addEventListener('click',function(){ log('cta_click'); });
+// 1순위 지표는 acttub 가입 전환이다 — 전환율 = cta_click ÷ result_view.
+// 계열을 함께 남겨 "어떤 색이 가입을 만드는가"를 볼 수 있게 한다.
+document.getElementById('cta').addEventListener('click',function(){
+  log('cta_click'); if(lastKey) log('cta_'+lastKey);
+});
 
 // 얼굴 대신 목소리 — 만든 이유가 됐는지 확인하는 한 줄. 건너뛸 수 있다.
 function resetAsk(){
