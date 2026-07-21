@@ -82,6 +82,8 @@
   /* 시작 전에는 0.0s·빈 게이지가 뜻이 없다. 자리는 잡아둬 시작 순간 화면이 안 튀게. */
   .idle{visibility:hidden}
   .spin{text-align:center;padding:40px 0}
+  /* 마스코트 아래로 문구·점이 이어지는 배치라 위쪽 여백이 두 번 겹친다 */
+  #s-analyzing .spin{padding:8px 0}
   /* brand/DESIGN.md 기다림 규칙: 불투명도만 1.2s 주기로. 크기 변화(scale)로 표현하지 않는다. */
   .spin .dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--accent);margin:0 4px;animation:b 1.2s infinite ease-in-out}
   .spin .dot:nth-child(2){animation-delay:.18s}.spin .dot:nth-child(3){animation-delay:.36s}
@@ -125,7 +127,7 @@
      같은 격자를 랜딩에도 써서 "이걸 찾아준다"를 첫 화면에 먼저 보여준다. */
   /* 폭을 묶지 않으면 칸이 100px까지 커져서 랜딩의 시작 버튼이 접힘선 아래로 밀린다 */
   .grid{display:grid;grid-template-columns:38px repeat(4,1fr);gap:5px;align-items:center;
-    max-width:296px;margin:0 auto}
+    max-width:268px;margin:0 auto}
   .grid__col{font-size:10px;color:var(--ink-2);text-align:center;line-height:1.2;letter-spacing:-.03em}
   .grid__row{font-size:10px;color:var(--ink-2);text-align:right;padding-right:4px;letter-spacing:-.03em}
   .sw{aspect-ratio:1;border-radius:9px;background:var(--sw);border:0;padding:0;
@@ -133,24 +135,48 @@
   /* 내 색만 남기고 나머지를 죽여, 격자에서 내 자리가 한눈에 잡히게 한다 */
   .grid--mine .sw{opacity:.2}
   .grid--mine .sw.on{opacity:1;box-shadow:0 0 0 3px var(--surface),0 0 0 5px var(--ink)}
-  .grid-wrap{margin:18px 0 22px}
-  .grid-legend{font-size:11px;color:var(--ink-2);margin:10px 0 0;text-align:center}
+  .grid-wrap{margin:16px 0 24px}
+  .grid-legend{font-size:11px;color:var(--ink-2);margin:8px 0 0;text-align:center}
   /* 캡션이 길어 복사 버튼이 왼쪽에 홀로 떨어져 보였다 — 줄을 바꿔 오른쪽에 붙인다 */
-  .caption .mini{display:flex;margin:10px 0 0 auto}
-  .caption{margin-top:14px}
-  /* 안내역 캐릭터 (acti에서 가져옴). 장식이라 스크린리더에서는 숨긴다. */
+  .caption .mini{display:flex;margin:8px 0 0 auto}
+  .caption{margin-top:16px}
+  /* acttub 마스코트 (brand/마스코트/ 정본). 규칙은 그 폴더의 README에 있다.
+     핵심 두 가지: 장식이라 스크린리더에서 숨기고(alt=""), 사용자의 결과에 반응시키지 않는다.
+     — 그래서 결과 화면과 녹음 화면에는 두지 않는다. 녹음 중에 얼굴이 보고 있으면
+     "누가 나를 듣고 있다"는 압력이 생겨 낭독이 위축된다. */
   .guide{display:block;margin:0 auto;height:132px;width:auto}
-  .guide--sm{height:96px}
-  .hero{display:flex;align-items:flex-end;gap:10px;margin:0 0 4px}
-  .hero h1{flex:1;margin:0}
-  .hero .guide{height:104px;margin:0;flex:none}
+  #s-analyzing .guide{height:190px}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+    clip:rect(0 0 0 0);white-space:nowrap;border:0}
+  /* 히어로 — 마스코트를 가운데 세우고 그 아래로 제목·설명·격자가 한 줄기로 내려온다.
+     오른쪽 위에 붙여 두면 나중에 덧붙인 스티커처럼 읽힌다. */
+  .hero{text-align:center;margin:0 0 16px}
+  .hero h1{margin:0 0 8px}
+  /* DESIGN.md: 본문은 좌측 정렬이 기본이다. 여러 줄 설명을 가운데 쌓으면 읽기 흐름이 끊긴다.
+     가운데 두는 것은 마스코트와 짧은 제목까지다. */
+  .hero .lead{text-align:left}
+  /* 마스코트 뒤의 옅은 원 — 캐릭터가 배경에서 뜨지 않게 받쳐준다.
+     brand/마스코트/README.md의 아바타 원(채움 #9FD4F5)보다 훨씬 옅게 쓴다.
+     여기는 누를 수 있는 아바타가 아니라 배경이라 테두리를 두지 않는다. */
+  .hero__art{position:relative;height:160px;margin:0 0 16px}
+  .hero__art::before{content:"";position:absolute;left:50%;top:24px;transform:translateX(-50%);
+    width:144px;height:144px;border-radius:50%;background:#9fd4f5;opacity:.34}
+  .hero__art .guide{position:relative;height:160px}
   /* 작은 폰(아이폰 SE 568px 등)에서 격자를 그대로 두면 시작 버튼이 접힘선 아래로 내려간다.
      1순위 지표가 가입 전환이라 버튼이 먼저 보이는 쪽을 택한다. */
   @media (max-height:680px){
     body{padding-top:24px}
-    .grid{max-width:224px;gap:4px;grid-template-columns:34px repeat(4,1fr)}
-    .hero .guide{height:80px}
-    .grid-wrap{margin:12px 0 16px}
+    .hero__art{height:120px;margin-bottom:8px}
+    .hero__art::before{width:108px;height:108px;top:16px}
+    .hero__art .guide{height:120px}
+    /* 격자를 더 줄이면 못 읽는다. 대신 버튼을 격자 위로 올려
+       시작 버튼이 항상 먼저 보이게 한다(1순위 지표가 가입 전환이다). */
+    /* .on을 빼면 .screen{display:none}을 이기고 랜딩이 다른 화면 위에 계속 남는다 */
+    #s-landing.on{display:flex;flex-direction:column}
+    #s-landing .hero{order:1}
+    #s-landing #go-record{order:2}
+    #s-landing .note{order:3}
+    #s-landing .grid-wrap{order:4;margin:24px 0 0}
   }
   @media (prefers-reduced-motion:reduce){
     *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;
@@ -162,20 +188,20 @@
 <div class="wrap">
   <section id="s-landing" class="screen on">
     <div class="hero">
+      <div class="hero__art">
+        <img class="guide" src="/characters/stand.webp" alt="" aria-hidden="true" width="288" height="560" decoding="async">
+      </div>
       <h1>한 문장 읽으면<br>내 목소리 색이 나와</h1>
-      <img class="guide" src="/characters/miab.webp" alt="" aria-hidden="true" width="388" height="440" decoding="async">
+      <p class="lead">배우를 위한 <b>목소리 퍼스널컬러</b>. 음높이 4구간 × 목소리 결 4가지 = <b>16색</b> 중 네 색을 찾아줘. 점수도 우열도 없어.</p>
     </div>
-    <p class="lead">배우를 위한 <b>목소리 퍼스널컬러</b>. 음높이 4구간 × 목소리 결 4가지 = <b>16색</b> 중 네 색을 찾아줘. 점수도 우열도 없어.</p>
     <div class="grid-wrap"><div class="grid grid--all" id="l-grid"></div>
       <p class="grid-legend">벨벳 · 카라멜 · 데님 · 허니 · 민트 · 크리스탈 …<br>이 16칸 중 한 칸이 네 자리야</p></div>
-    <div style="height:24px"></div>
     <button class="btn" id="go-record">🎙️ 한 문장 읽고 내 색 보기</button>
     <p class="note">마이크 권한이 필요해요. 목소리만 분석하고, 녹음은 저장하지 않아요.</p>
   </section>
 
   <section id="s-record" class="screen">
     <p class="step">🎙️ 한 문장 녹음 · 최대 30초</p>
-    <img class="guide guide--sm" src="/characters/mpas.webp" alt="" aria-hidden="true" width="374" height="440" decoding="async">
     <div class="prompt-box"><p class="q">이 문장을 소리 내어 읽어줘</p><p class="s" id="prompt-sentence">—</p>
       <button class="mini" id="re-pick" type="button">다른 문장으로</button></div>
     <p class="hint">내용은 상관없어 — <b>목소리만</b> 들어. 편하게 한 문장 읽으면 돼. (녹음은 저장 안 해)</p>
@@ -189,9 +215,12 @@
 
   <section id="s-analyzing" class="screen">
     <div class="card">
-    <img class="guide" src="/characters/mins.webp" alt="" aria-hidden="true" width="312" height="440" decoding="async">
-    <div class="spin"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
-    <p style="text-align:center;color:var(--ink-2);margin:0">녹음한 목소리에서 색을 찾는 중…</p></div>
+    <img class="guide" src="/characters/sit.webp" alt="" aria-hidden="true" width="329" height="420" decoding="async">
+    <!-- DESIGN.md: 기다리는 동안 무엇을 하는지 문장으로 설명하지 않는다.
+         점 세 개만 두고, 화면을 못 보는 사람에게는 상태를 따로 알린다.
+         마스코트 얼굴이 상태의 유일한 단서가 되지 않게 하는 장치이기도 하다. -->
+    <p class="sr-only" role="status">목소리에서 색을 찾는 중</p>
+    <div class="spin"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div></div>
   </section>
 
   <section id="s-result" class="screen">
