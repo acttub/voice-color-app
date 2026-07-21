@@ -99,6 +99,14 @@
   .bridge{font-size:14px;color:var(--ink);font-weight:600;margin:0 0 14px;word-break:keep-all}
   .caption{background:var(--surface-sub);border-radius:12px;padding:12px 14px;font-size:13px;color:var(--ink-3);margin:0;word-break:keep-all}
   .caption b{color:var(--ink-2);font-weight:600}
+  /* 보조 액션(캡션 복사·문장 다시 뽑기). 폰에서 누르는 버튼이라 다른 버튼과 같이 44px를 지킨다 —
+     36px로 뒀더니 오조작 위험 지적을 받았고, 캡션 상자가 조금 커지는 것보다 그게 낫다. */
+  .mini{display:inline-flex;align-items:center;min-height:44px;margin-left:6px;padding:6px 14px;
+    background:var(--surface);border:1px solid var(--line);border-radius:9999px;
+    font-family:inherit;font-size:12px;font-weight:600;color:var(--ink-2);cursor:pointer;
+    transition:background-color .1s ease-out}
+  .mini:hover,.mini:active{background:var(--line)}
+  .prompt-box .mini{margin:12px 0 0}
   /* CTA 다음에 오는 확인 문항 — 버튼 더미로 안 읽히게 hairline으로 끊는다 */
   .ask{margin-top:32px;padding-top:24px;border-top:1px solid var(--line);text-align:center}
   .ask__q{font-size:14px;color:var(--ink-3);margin:0 0 12px}
@@ -131,7 +139,8 @@
 
   <section id="s-record" class="screen">
     <p class="step">🎙️ 30초 녹음 · 목소리 색을 찾는 중</p>
-    <div class="prompt-box"><p class="q">이 문장을 소리 내어 읽어줘</p><p class="s" id="prompt-sentence">—</p></div>
+    <div class="prompt-box"><p class="q">이 문장을 소리 내어 읽어줘</p><p class="s" id="prompt-sentence">—</p>
+      <button class="mini" id="re-pick" type="button">다른 문장으로</button></div>
     <p class="hint">내용은 상관없어 — <b>목소리만</b> 들어. 편하게 한 문장 읽으면 돼. (녹음은 저장 안 해)</p>
     <div class="timer idle" id="timer">0.0s</div>
     <div class="meter idle" id="meter"><i id="level"></i></div>
@@ -158,13 +167,14 @@
       <div class="chips" id="r-chips"></div>
       <p class="spoon" id="r-spoon"></p>
       <div style="height:16px"></div>
-      <div class="caption"><b>공유 캡션</b> · <span id="r-caption">—</span></div>
+      <div class="caption"><b>공유 캡션</b> · <span id="r-caption">—</span>
+        <button class="mini" id="r-copy" type="button">복사</button></div>
       <hr class="divider">
       <p class="bridge">색은 타고난 것. 그 색으로 무슨 생각을 실을지는 연습이야.</p>
       <a class="btn" id="cta" href="https://acttub.com/?utm_source=voice-color&utm_medium=result_card&utm_campaign=voice2act" target="_blank" rel="noopener">acttub에서 무료로 질문 연습 시작 →</a>
     </div>
     <div style="height:14px"></div>
-    <button class="btn second" id="r-save">이미지로 저장</button>
+    <button class="btn second" id="r-save">카드 공유하기</button>
     <button class="btn ghost" id="r-again">다시 하기</button>
 
     <div class="ask" id="ask-face">
@@ -290,7 +300,34 @@ function pickSentence(){
 var lastKey=null, lastSpoon="";  // 저장 이미지용 마지막 결과
 var CTA_BASE='https://acttub.com/?utm_source=voice-color&utm_medium=result_card&utm_campaign=voice2act';
 
-function show(id){var xs=document.querySelectorAll('.screen');for(var i=0;i<xs.length;i++)xs[i].classList.remove('on');document.getElementById(id).classList.add('on');}
+function show(id){var xs=document.querySelectorAll('.screen');for(var i=0;i<xs.length;i++)xs[i].classList.remove('on');document.getElementById(id).classList.add('on');
+  // 화면을 바꾸면 스크롤도 위로. 결과에서 아래까지 내려본 뒤 '다시 하기'를 누르면
+  // 랜딩이 중간부터 보여서 화면이 안 바뀐 것처럼 읽힌다.
+  window.scrollTo(0,0);}
+// 하드웨어/브라우저 뒤로가기 = 이전 화면. 이게 없으면 폰에서 뒤로가기 한 번에 사이트를 나가버린다.
+// 결과에서 뒤로 = **랜딩**이다(녹음 화면으로 되돌리면 "다시 녹음하라"는 뜻이 돼 혼란스럽다)
+// — 그래서 결과는 push가 아니라 replace로 녹음 항목을 덮는다.
+// depth: 이 앱이 쌓은 항목이 아래에 있는지. '다시 하기'가 랜딩 항목을 계속 replace로
+// 덮으면 같은 랜딩이 시도 횟수만큼 쌓여, 사이트를 나가려면 뒤로가기를 여러 번 눌러야 한다.
+// 아래에 항목이 있으면 replace가 아니라 back으로 되돌아간다.
+function markScreen(id,push){
+  try{
+    var depth=push?((history.state&&history.state.depth)||0)+1:((history.state&&history.state.depth)||0);
+    (push?history.pushState:history.replaceState).call(history,{vc:id,depth:depth},'');
+  }catch(e){}
+}
+window.addEventListener('popstate',function(e){
+  var id=(e.state&&e.state.vc)||'s-landing';
+  // recording 여부를 보고 정리하면 안 된다 — stop()을 누른 직후엔 이미 false지만
+  // 트랙·타이머는 살아 있고 onstop도 아직 대기 중이다. 항상 정리한다(idle이어도 무해).
+  abortRecording();
+  endSession();                            // 분석 중이었으면 응답이 와도 화면을 끌고 가지 않게
+  if(id==='s-analyzing') id='s-landing';   // 분석 중은 되돌아갈 상태가 아니다
+  if(id!=='s-result') resetAsk();          // 다음 결과에서 확인 문항이 사라진 채로 뜨지 않게
+  show(id);
+});
+// 탭을 닫거나 뒤로 나갈 때 마이크가 켜진 채 남지 않게 한다
+window.addEventListener('pagehide',function(){ abortRecording(); endSession(); });
 // 계측 실패가 사용자 흐름을 건드리면 안 된다 — try/catch는 async 거부를 못 잡으므로 .catch도 단다
 function log(ev){ try{ fetch('/api/event',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({event:ev})}).catch(function(){}); }catch(e){} }
 
@@ -316,6 +353,16 @@ var stream=null,audioCtx=null,analyser=null,timeBuf=null,rafId=null,recTimer=nul
 var recorder=null,chunks=[],recording=false,elapsed=0;
 var pitchTimer=null, pitches=[];
 var MIN_SEC=3;  // 이보다 짧으면 피치 표본도 파일 크기도 모자란다
+var ANALYZE_TIMEOUT=45000;  // 업로드 + 모델 응답. fetch를 실제로 시작한 뒤부터 잰다
+// '녹음 한 번'의 수명. 중간에 뒤로가기·다시하기로 취소되면 번호가 올라가고,
+// 뒤늦게 돌아온 비동기 결과(권한 허용, 분석 응답)는 자기 번호가 아니면 화면을 건드리지 않는다.
+// recSession: 지금 돌고 있는 녹음의 번호. onstop 진입 시점에 session을 읽으면
+// 그 사이 취소로 올라간 번호를 자기 것으로 착각해, 버린 녹음이 다시 분석 화면을 띄운다.
+var session=0, recSession=-1, analyzeCtl=null, starting=false;
+function endSession(){
+  session++;
+  if(analyzeCtl){ try{ analyzeCtl.abort(); }catch(e){} analyzeCtl=null; }
+}
 function median(a){ if(!a.length) return NaN; var b=a.slice().sort(function(x,y){return x-y;}); var m=b.length>>1; return b.length%2?b[m]:(b[m-1]+b[m])/2; }
 function autoCorrelate(buf,sr){
   var SIZE=buf.length,rms=0,i,j;
@@ -338,10 +385,34 @@ function drawLevel(){analyser.getFloatTimeDomainData(timeBuf);var r=0;for(var i=
   document.getElementById('level').style.width=Math.min(100,Math.sqrt(r/timeBuf.length)*400)+'%';rafId=requestAnimationFrame(drawLevel);}
 
 async function startRecording(){
+  if(starting||recording) return;          // 시작 버튼 연타로 세션이 겹치는 걸 막는다
+  starting=true;
+  var my=++session;
+  var tog0=document.getElementById('rec-toggle');
+  tog0.disabled=true;                      // 권한 대화상자가 떠 있는 동안 버튼을 잠근다
   document.getElementById('rec-err').textContent='';
-  try{ stream=await navigator.mediaDevices.getUserMedia({audio:true}); }
-  catch(e){ document.getElementById('rec-err').textContent='마이크를 열 수 없어요. 권한을 허용하고 https나 localhost에서 열어줘.'; return; }
-  audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+  // AudioContext는 **await 전에** 만든다. iOS는 getUserMedia를 기다리는 사이 사용자 제스처가
+  // 끊겨서, 그 뒤에 만든 컨텍스트가 suspended로 시작한다(레벨 미터가 안 움직이고 피치 표본이
+  // 0개라 pitchHz가 null이 된다). 클릭의 동기 구간에서 만들어야 살아 있는 채로 시작한다.
+  var ctx=new (window.AudioContext||window.webkitAudioContext)();
+  if(ctx.state==='suspended'){ try{ ctx.resume(); }catch(e){} }
+  var st=null;
+  try{ st=await navigator.mediaDevices.getUserMedia({audio:true}); }
+  catch(e){
+    starting=false; tog0.disabled=false;
+    try{ ctx.close(); }catch(e2){}
+    // 떠난 뒤에 도착한 거부는 안 보이는 화면에 쓰지 않는다 — 다음에 들어올 때 남의 오류가 떠 있게 된다
+    if(my!==session) return;
+    document.getElementById('rec-err').textContent='마이크를 열 수 없어요. 권한을 허용하고 https나 localhost에서 열어줘.';
+    return;
+  }
+  starting=false;
+  // 권한을 기다리는 동안 뒤로가기·다시하기로 떠났으면 여기서 끝낸다 —
+  // 안 그러면 안 보이는 화면 뒤에서 마이크와 타이머가 돌아간다.
+  // 버튼 잠금은 반드시 같이 푼다 — 안 그러면 녹음 화면에 돌아와도 시작 버튼이 죽어 있다.
+  if(my!==session){ st.getTracks().forEach(function(t){t.stop();}); try{ ctx.close(); }catch(e){}
+    tog0.disabled=false; tog0.textContent='녹음 시작'; return; }
+  stream=st; audioCtx=ctx; tog0.disabled=false; recSession=my;
   analyser=audioCtx.createAnalyser();analyser.fftSize=2048;
   audioCtx.createMediaStreamSource(stream).connect(analyser);
   timeBuf=new Float32Array(analyser.fftSize); pitches=[];
@@ -351,23 +422,34 @@ async function startRecording(){
   recorder.start();
   recording=true;elapsed=0;
   var tog=document.getElementById('rec-toggle');
-  tog.textContent='녹음 끝내기';
   document.getElementById('timer').classList.remove('idle');
   document.getElementById('meter').classList.remove('idle');
-  // 1초짜리 녹음은 분석이 실패한다 — 실패 메시지 대신 MIN_SEC 동안 끝내기를 잠근다
-  tog.disabled=true;
+  document.getElementById('re-pick').disabled=true;   // 녹음 중에 문장이 바뀌면 읽던 걸 잃는다
+  // 1초짜리 녹음은 분석이 실패한다 — 실패 메시지 대신 MIN_SEC 동안 끝내기를 잠근다.
+  // 잠근 이유를 버튼에 적는다: 회색 버튼만 있으면 고장으로 읽힌다.
+  tog.disabled=true; tog.textContent='조금만 더 들려줘 · '+MIN_SEC+'s';
   drawLevel(); pitchTimer=setInterval(samplePitch,80);
   recTimer=setInterval(function(){
     elapsed+=0.1;
     document.getElementById('timer').textContent=elapsed.toFixed(1)+'s';
-    if(tog.disabled&&elapsed>=MIN_SEC) tog.disabled=false;
+    if(tog.disabled){
+      if(elapsed>=MIN_SEC){ tog.disabled=false; tog.textContent='녹음 끝내기'; }
+      else tog.textContent='조금만 더 들려줘 · '+Math.ceil(MIN_SEC-elapsed)+'s';
+    }
     if(elapsed>=30)stopRecording();
   },100);
 }
-function stopRecording(){ if(!recording)return; recording=false; if(recorder&&recorder.state!=='inactive')recorder.stop(); }
+function stopRecording(){ if(!recording)return; recording=false;
+  // stop()과 onstop 사이에 또 눌리면 새 녹음이 시작돼 세션이 겹친다
+  document.getElementById('rec-toggle').disabled=true;
+  if(recorder&&recorder.state!=='inactive')recorder.stop(); }
 // 녹음 중 '뒤로'를 눌렀을 때 트랙 종료가 recorder.onstop을 깨워 분석 화면으로 튀는 걸 막는다
 function abortRecording(){
   recording=false;
+  // 권한 대화상자에 답하지 않으면 getUserMedia는 무기한 pending이다. starting을 안 풀면
+  // 돌아와서 버튼을 눌러도 맨 위 `if(starting||recording) return`에 걸려 아무 일도 안 일어난다.
+  // 늦게 도착한 옛 요청은 자기 번호가 아니라서 스스로 물러난다.
+  starting=false;
   if(recorder){ recorder.onstop=null; if(recorder.state!=='inactive')recorder.stop(); recorder=null; }
   chunks=[]; teardown();
   document.getElementById('timer').textContent='0.0s';
@@ -381,6 +463,7 @@ function teardown(){
   if(audioCtx){audioCtx.close();audioCtx=null;} analyser=null;
   var tog=document.getElementById('rec-toggle');
   tog.textContent='녹음 시작'; tog.disabled=false;
+  document.getElementById('re-pick').disabled=false;
   document.getElementById('level').style.width='0%';
   document.getElementById('timer').classList.add('idle');
   document.getElementById('meter').classList.add('idle');
@@ -393,26 +476,46 @@ function blobToBase64(blob){
   });
 }
 async function onRecordingStop(){
+  var my=recSession;              // **onstop 진입 시점의 session이 아니라 녹음 시작 때 받은 번호**다
   var blob=new Blob(chunks,{type:(recorder&&recorder.mimeType)||'audio/webm'});
   var mime=blob.type||'audio/webm';
   teardown();
+  // stop()을 누른 직후 뒤로가기로 취소됐으면 여기서 끝낸다 — 버린 녹음이 분석 화면을 띄우면 안 된다
+  if(my!==session) return;
   if(blob.size<2000){ document.getElementById('rec-err').textContent='목소리가 잘 안 잡혔어. 다시 들려줄래?'; document.getElementById('timer').textContent='0.0s'; return; }
   show('s-analyzing'); log('analyze_start');
+  var killer=null, timedOut=false, ctl=null;   // ctl은 지역 — 늦게 끝난 앞 요청이 새 요청을 끊지 않게
   try{
     var pitchHz = pitches.length>=5 ? Math.round(median(pitches)) : null;
     var b64=await blobToBase64(blob);
-    var r=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({audio:b64,mime:mime,pitchHz:pitchHz})});
+    if(my!==session) return;      // 변환 중에 뒤로가기로 떠났다
+    var opt={method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({audio:b64,mime:mime,pitchHz:pitchHz})};
+    // 응답이 안 오면 점 세 개가 영원히 뛴다 — 실패로 떨어뜨려 다시 시도할 수 있게 한다.
+    // 시계는 **fetch를 실제로 시작한 뒤부터** 잰다(base64 변환까지 포함하면 느린 폰이 억울하게 끊긴다).
+    try{
+      ctl=new AbortController(); analyzeCtl=ctl; opt.signal=ctl.signal;
+      killer=setTimeout(function(){ timedOut=true; try{ ctl.abort(); }catch(e){} },ANALYZE_TIMEOUT);
+    }catch(e){}
+    var r=await fetch('/api/analyze',opt);
+    if(my!==session) return;
     if(!r.ok) throw new Error('http '+r.status);
     var data=await r.json();
+    if(my!==session) return;
     if(!SERIES[data.series]) throw new Error('bad series');
     renderResult(data); saveLast(data,false);
     log('result_view'); log('result_'+data.series);
   }catch(e){
-    log('analyze_fail');
+    if(my!==session) return;      // 취소돼서 난 오류는 사용자에게 보여줄 게 아니다
+    // 컨테이너 종류를 같이 남긴다 — 특정 컨테이너만 실패하는지 전부 실패하는지가 갈린다.
+    // (기기 판별이 아니다: mimeType은 지정하지 않아 브라우저가 고른다)
+    log('analyze_fail'); log('analyze_fail_'+(mime.indexOf('mp4')>=0?'mp4':mime.indexOf('webm')>=0?'webm':'etc'));
+    if(timedOut) log('analyze_timeout');   // 실패율에서 '느려서 끊긴 것'을 따로 본다
     show('s-record');
-    document.getElementById('rec-err').textContent='분석에 실패했어. 잠깐 뒤 다시 해줘.';
+    document.getElementById('rec-err').textContent=timedOut
+      ? '분석이 너무 오래 걸려. 잠깐 뒤 다시 해줄래?'
+      : '분석에 실패했어. 잠깐 뒤 다시 해줘.';
     document.getElementById('timer').textContent='0.0s';
-  }
+  }finally{ if(killer) clearTimeout(killer); if(analyzeCtl===ctl) analyzeCtl=null; }
 }
 function renderResult(data){
   var s=SERIES[data.series]; lastKey=data.series;
@@ -434,6 +537,9 @@ function renderResult(data){
   var cta=document.getElementById('cta');
   cta.href=CTA_BASE+'&utm_content='+encodeURIComponent(data.series);
   show('s-result');
+  // push가 아니라 replace다 — 결과에서 뒤로 누르면 녹음 화면이 아니라 랜딩으로 가야 한다
+  markScreen('s-result',false);
+  prepCard();   // 공유 버튼이 눌리기 전에 PNG를 미리 만들어 둔다
 }
 var FONT='"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif';
 function rrect(ctx,x,y,w,h,r){
@@ -466,8 +572,7 @@ function tchips(ctx,arr,x,y,maxW,draw){
   }
   return cy+30;
 }
-function saveImage(){
-  if(!lastKey) return;
+function buildCard(){
   var s=SERIES[lastKey];
   var CW=1080, M=36, PAD=64, ix=M+PAD, maxW=CW-2*M-2*PAD;
   function render(ctx,draw){
@@ -497,20 +602,97 @@ function saveImage(){
   x.fillStyle='#f2f4f6'; x.fillRect(0,0,CW,H);
   rrect(x,M,M,CW-2*M,H-2*M,40); x.fillStyle='#ffffff'; x.fill();
   render(x,true);
+  return c;
+}
+// 공유 — 폰에서 카드가 실제로 나가는 유일한 경로다.
+// 그 전엔 `a.download`뿐이었는데, 아이폰에서 이건 앨범 저장이나 인스타 공유로 이어지지 않고
+// 파일 다운로드로 끝난다. 이 앱 사용자는 대부분 폰이라 2순위 지표(공유)가 사실상 막혀 있었다.
+// 그래서 파일 공유가 되는 기기에서는 OS 공유 시트를 띄우고,
+// 안 되는 기기(데스크톱 대부분)에서만 기존 다운로드로 떨어진다.
+function downloadCard(c){
   var a=document.createElement('a'); a.download='voice-color-'+lastKey+'.png'; a.href=c.toDataURL('image/png'); a.click();
   log('share_save');
 }
+// 카드 PNG는 **결과가 뜬 직후 미리** 만들어 둔다. 클릭 핸들러 안에서 toBlob을 기다렸다가
+// share()를 부르면 iOS가 그 사이 사용자 제스처(transient activation)를 잃어 공유 시트가
+// 조용히 안 뜬다 — 고치려던 문제가 그대로 재발한다. 클릭 시점에는 동기로 share()만 부른다.
+// toBlob은 비동기다. 준비되기 전에 누르면 cardFile이 null이라 다운로드로 새는데,
+// 그게 바로 아이폰에서 고치려던 경로다. 그래서 **준비될 때까지 버튼을 잠근다.**
+var cardFile=null, cardFor=null;
+function prepCard(){
+  cardFile=null; cardFor=null;
+  var btn=document.getElementById('r-save');
+  var mine=lastKey;                       // 이 카드가 어느 결과의 것인지 고정한다
+  function ready(){ btn.disabled=false; btn.textContent='카드 공유하기'; }
+  try{
+    var c=buildCard();
+    if(!c.toBlob){ ready(); return; }     // toBlob이 없으면 어차피 다운로드 경로다
+    btn.disabled=true; btn.textContent='카드 만드는 중…';
+    c.toBlob(function(b){
+      if(mine!==lastKey) return;          // 그 사이 다른 결과가 떴으면 이 카드는 버린다
+      try{ if(b){ cardFile=new File([b],'voice-color-'+mine+'.png',{type:'image/png'}); cardFor=mine; } }catch(e){}
+      ready();
+    },'image/png');
+  }catch(e){ ready(); }
+}
+function shareCard(){
+  if(!lastKey) return;
+  var text=SERIES[lastKey].caption+' → voice.acttub.com';
+  try{
+    if(cardFile && cardFor===lastKey && navigator.canShare && navigator.canShare({files:[cardFile]})){
+      navigator.share({files:[cardFile],text:text}).then(function(){ log('share_native'); },
+        // 사용자가 공유 시트를 닫은 건 실패가 아니다 — 다운로드로 떨어뜨리지 않는다
+        function(err){ if(!err||err.name!=='AbortError') downloadCard(buildCard()); });
+      return;
+    }
+  }catch(e){}
+  downloadCard(buildCard());   // 파일 공유가 없는 기기(데스크톱 대부분)
+}
+function copyCaption(){
+  var t=document.getElementById('r-caption').textContent, btn=document.getElementById('r-copy');
+  function flash(msg){ btn.textContent=msg; setTimeout(function(){ btn.textContent='복사'; },1800); }
+  function done(){ flash('복사됨'); log('caption_copy'); }
+  // 인스타·카톡 인앱 브라우저는 navigator.clipboard가 없거나 막혀 있다. 그때 아무 반응도
+  // 없으면 고장으로 읽히므로, 옛 execCommand로 한 번 더 시도하고 그것도 실패하면 그렇다고 말한다.
+  function legacy(){
+    var ta=document.createElement('textarea');
+    ta.value=t; ta.setAttribute('readonly',''); ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0,t.length);
+    var ok=false; try{ ok=document.execCommand('copy'); }catch(e){}
+    document.body.removeChild(ta);
+    // 둘 다 막힌 인앱 브라우저에서는 캡션을 대신 선택해 준다 —
+    // "길게 눌러 복사"라고만 쓰면 버튼을 길게 누르라는 뜻으로 읽히는데 그건 안 된다.
+    if(ok){ done(); return; }
+    try{
+      var sel=window.getSelection(), rg=document.createRange();
+      rg.selectNodeContents(document.getElementById('r-caption'));
+      sel.removeAllRanges(); sel.addRange(rg);
+    }catch(e){}
+    flash('선택했어 · 복사 눌러줘');   // 선택까지만 해줄 수 있다. 복사는 브라우저 메뉴 몫이다
+  }
+  if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(t).then(done,legacy); }
+  else legacy();
+}
 document.getElementById('go-record').addEventListener('click',function(){
   document.getElementById('prompt-sentence').textContent=pickSentence();
-  log('record_open'); show('s-record');
+  log('record_open'); show('s-record'); markScreen('s-record',true);
+});
+document.getElementById('re-pick').addEventListener('click',function(){
+  document.getElementById('prompt-sentence').textContent=pickSentence();
 });
 document.getElementById('rec-toggle').addEventListener('click',function(){ if(recording)stopRecording();else startRecording(); });
-document.getElementById('rec-back').addEventListener('click',function(){ abortRecording(); show('s-landing'); });
+// 화면 안 '뒤로'와 폰의 뒤로가기가 같은 길을 타게 한다 — popstate 쪽에서 abort까지 처리한다
+document.getElementById('rec-back').addEventListener('click',function(){ history.back(); });
 document.getElementById('r-again').addEventListener('click',function(){
   document.getElementById('timer').textContent='0.0s';
-  clearLast(); resetAsk(); show('s-landing');
+  clearLast(); resetAsk(); endSession();
+  // 아래에 우리가 쌓은 항목이 있으면 되돌아간다(랜딩 항목이 중복으로 쌓이지 않게).
+  // 저장된 결과로 바로 들어온 경우엔 아래가 없으므로 제자리에서 바꾼다.
+  if(history.state&&history.state.depth){ history.back(); return; }
+  show('s-landing'); markScreen('s-landing',false);
 });
-document.getElementById('r-save').addEventListener('click',saveImage);
+document.getElementById('r-save').addEventListener('click',shareCard);
+document.getElementById('r-copy').addEventListener('click',copyCaption);
 // 1순위 지표는 acttub 가입 전환이다 — 전환율 = cta_click ÷ result_view.
 // 계열을 함께 남겨 "어떤 색이 가입을 만드는가"를 볼 수 있게 한다.
 document.getElementById('cta').addEventListener('click',function(){
@@ -518,8 +700,11 @@ document.getElementById('cta').addEventListener('click',function(){
 });
 
 // 얼굴 대신 목소리 — 만든 이유가 됐는지 확인하는 한 줄. 건너뛸 수 있다.
+// 이미 답한 결과면 문항을 다시 열지 않는다 — 뒤로/앞으로가기로 같은 결과에 돌아왔을 때
+// 폼이 다시 뜨면 같은 사람이 두 번 답해 face_* 숫자가 부풀어 근거로 못 쓴다.
 function resetAsk(){
-  document.getElementById('ask-face').hidden=false;
+  var d=loadLast(), answered=!!(d&&d.answered);
+  document.getElementById('ask-face').hidden=answered;
   document.getElementById('ask-done').hidden=true;
 }
 function closeAsk(ans){
@@ -535,6 +720,7 @@ for(var ai=0;ai<askBtns.length;ai++){
 
 // 진입 계측 + 직전 결과 복원 (복원은 result_view로 세지 않는다 — 공유율 분모가 부풀지 않게)
 log('landing_view');
+markScreen('s-landing',false);
 (function restore(){
   var d=loadLast(); if(!d) return;
   renderResult(d);

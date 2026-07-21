@@ -1,8 +1,15 @@
 // 보이스 컬러 — Vercel 서버리스 함수 (/api/analyze)
 // 브라우저가 보낸 base64 오디오를 Gemini로 분석하고 계열/지역/속도 key만 반환.
 // 키 숨김 · 음원 미저장(메모리만) · 베스트에포트 레이트리밋.
-// 검증 2026-07-16: 실제 키로 오디오 콜 성공. 모델은 시간 지나면 단종 — 404 나면 GET /v1beta/models 로 목록 확인 후 GEMINI_MODEL 교체.
-// 검증된 모델: gemini-2.5-flash(기본), gemini-flash-lite-latest(더 쌈), gemini-3.5-flash.
+// 모델은 시간 지나면 단종 — 404 나면 GET /v1beta/models 로 목록 확인 후 GEMINI_MODEL 교체.
+// ⚠️ 2026-07-21: 이 프로젝트의 키로 gemini-2.5-flash를 부르면
+//    "This model is no longer available to new users" 404가 났다 → 앱이 전부 '분석 실패'였다.
+//    (구글 공식 종료 예정일은 2026-10-16이라 모델 자체가 없어진 게 아니라 이 키에 안 열린 것이다.)
+//    기본값을 gemini-3.5-flash로 올렸다. **models 목록에 이름이 보여도 호출은 404일 수 있으니**
+//    목록만 보고 살아있다고 판단하지 말고 실제로 한 번 호출해 볼 것.
+//    ⚠️ gemini-3.5-flash로 이 키에서 실제 오디오 호출이 되는지는 **아직 확인 못 했다.**
+//    (공식 문서상 오디오 입력·구조화 출력을 지원하는 GA 모델이라는 것까지만 확인.)
+//    더 싼 대안: gemini-flash-lite-latest.
 "use strict";
 
 // 16색 = 톤 4단계(저음/중저음/중고음/고음) × 질감 4단계(따뜻/부드러움/또렷/서늘)
@@ -85,7 +92,7 @@ module.exports = async (req, res) => {
     const pitchHz = Number(body.pitchHz) > 0 ? Math.round(Number(body.pitchHz)) : null;
     if (!audio) return res.status(400).json({ error: "no_audio" });
 
-    const model = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+    const model = process.env.GEMINI_MODEL || "gemini-3.5-flash";
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
     const payload = {
       contents: [{ parts: [
@@ -95,7 +102,12 @@ module.exports = async (req, res) => {
       generationConfig: { responseMimeType: "application/json", responseSchema: RESPONSE_SCHEMA, temperature: 0 }
     };
 
-    const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+    // 브라우저가 45초에 끊어도 그 abort는 여기까지 전파되지 않는다 —
+    // 마감시간이 없으면 사용자가 포기하고 다시 시도할 때마다 Gemini 호출이 겹쳐 쿼터만 먹는다.
+    // 클라이언트(45초)보다 짧게 잡아 서버가 먼저 손을 뗀다.
+    let signal;
+    try { signal = AbortSignal.timeout(40000); } catch (e) { signal = undefined; }
+    const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload), signal });
     if (!r.ok) throw new Error("gemini_" + r.status);
     const data = await r.json();
     const text =

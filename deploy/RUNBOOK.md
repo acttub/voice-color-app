@@ -36,7 +36,7 @@ AWS·도메인·서버 없이 무료로. 🙋 = 너만, 💻 = 명령 복붙.
 | 이름 | 필수 | 값 |
 |---|---|---|
 | `GEMINI_API_KEY` | ✅ | AI Studio 키 |
-| `GEMINI_MODEL` | ✖ | 기본 `gemini-2.5-flash` (검증). 더 쌈: `gemini-flash-lite-latest` |
+| `GEMINI_MODEL` | ✖ | 기본 `gemini-3.5-flash`. 더 쌈: `gemini-flash-lite-latest`. ⚠️ `gemini-2.5-flash`는 2026-07-21 이 프로젝트 키에서 404 — 되돌리지 말 것 |
 | `SUPABASE_URL` / `SUPABASE_SERVICE_KEY` | ✖ | 집계 쓸 때만 (schema.sql 먼저 실행) |
 
 ## ⚠️ 배포 전/후 확인
