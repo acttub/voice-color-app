@@ -120,6 +120,38 @@
   .ask__skip{background:none;border:0;color:var(--ink-3);font-size:12px;margin-top:4px;
     padding:14px 16px;min-height:44px;cursor:pointer;text-decoration:underline;font-family:inherit}
   .ask__done{text-align:center;font-size:13px;color:var(--ink-3);margin-top:32px;padding-top:24px;border-top:1px solid var(--line)}
+  /* 16색 격자 — 이 앱의 뼈대(톤 4단계 × 질감 4단계)를 눈에 보이게 한다.
+     결과를 글로만 알려주면 "내가 16색 중 어디인지"가 안 보여서 결과가 안 읽힌다.
+     같은 격자를 랜딩에도 써서 "이걸 찾아준다"를 첫 화면에 먼저 보여준다. */
+  /* 폭을 묶지 않으면 칸이 100px까지 커져서 랜딩의 시작 버튼이 접힘선 아래로 밀린다 */
+  .grid{display:grid;grid-template-columns:38px repeat(4,1fr);gap:5px;align-items:center;
+    max-width:296px;margin:0 auto}
+  .grid__col{font-size:10px;color:var(--ink-2);text-align:center;line-height:1.2;letter-spacing:-.03em}
+  .grid__row{font-size:10px;color:var(--ink-2);text-align:right;padding-right:4px;letter-spacing:-.03em}
+  .sw{aspect-ratio:1;border-radius:9px;background:var(--sw);border:0;padding:0;
+    opacity:.9;transition:opacity .15s ease-out}
+  /* 내 색만 남기고 나머지를 죽여, 격자에서 내 자리가 한눈에 잡히게 한다 */
+  .grid--mine .sw{opacity:.2}
+  .grid--mine .sw.on{opacity:1;box-shadow:0 0 0 3px var(--surface),0 0 0 5px var(--ink)}
+  .grid-wrap{margin:18px 0 22px}
+  .grid-legend{font-size:11px;color:var(--ink-2);margin:10px 0 0;text-align:center}
+  /* 캡션이 길어 복사 버튼이 왼쪽에 홀로 떨어져 보였다 — 줄을 바꿔 오른쪽에 붙인다 */
+  .caption .mini{display:flex;margin:10px 0 0 auto}
+  .caption{margin-top:14px}
+  /* 안내역 캐릭터 (acti에서 가져옴). 장식이라 스크린리더에서는 숨긴다. */
+  .guide{display:block;margin:0 auto;height:132px;width:auto}
+  .guide--sm{height:96px}
+  .hero{display:flex;align-items:flex-end;gap:10px;margin:0 0 4px}
+  .hero h1{flex:1;margin:0}
+  .hero .guide{height:104px;margin:0;flex:none}
+  /* 작은 폰(아이폰 SE 568px 등)에서 격자를 그대로 두면 시작 버튼이 접힘선 아래로 내려간다.
+     1순위 지표가 가입 전환이라 버튼이 먼저 보이는 쪽을 택한다. */
+  @media (max-height:680px){
+    body{padding-top:24px}
+    .grid{max-width:224px;gap:4px;grid-template-columns:34px repeat(4,1fr)}
+    .hero .guide{height:80px}
+    .grid-wrap{margin:12px 0 16px}
+  }
   @media (prefers-reduced-motion:reduce){
     *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;
       transition-duration:.01ms!important}
@@ -129,16 +161,21 @@
 <body>
 <div class="wrap">
   <section id="s-landing" class="screen on">
-    <h1>내 목소리는<br>무슨 색일까?</h1>
-    <p class="lead">배우를 위한 <b>목소리 퍼스널컬러</b>. 30초 녹음하면 네 목소리를 <b>16가지 색</b> 중 하나로 찾아줘 — 점수도 판정도 없이.</p>
-    <p class="sub">🎙️ 벨벳 · 🍮 카라멜 · 🍯 허니 · ☀️ 선샤인 · 💎 크리스탈 … &nbsp;넌 무슨 색?</p>
+    <div class="hero">
+      <h1>한 문장 읽으면<br>내 목소리 색이 나와</h1>
+      <img class="guide" src="/characters/miab.webp" alt="" aria-hidden="true" width="388" height="440" decoding="async">
+    </div>
+    <p class="lead">배우를 위한 <b>목소리 퍼스널컬러</b>. 음높이 4구간 × 목소리 결 4가지 = <b>16색</b> 중 네 색을 찾아줘. 점수도 우열도 없어.</p>
+    <div class="grid-wrap"><div class="grid grid--all" id="l-grid"></div>
+      <p class="grid-legend">벨벳 · 카라멜 · 데님 · 허니 · 민트 · 크리스탈 …<br>이 16칸 중 한 칸이 네 자리야</p></div>
     <div style="height:24px"></div>
-    <button class="btn" id="go-record">🎙️ 내 목소리 색 보기</button>
+    <button class="btn" id="go-record">🎙️ 한 문장 읽고 내 색 보기</button>
     <p class="note">마이크 권한이 필요해요. 목소리만 분석하고, 녹음은 저장하지 않아요.</p>
   </section>
 
   <section id="s-record" class="screen">
-    <p class="step">🎙️ 30초 녹음 · 목소리 색을 찾는 중</p>
+    <p class="step">🎙️ 한 문장 녹음 · 최대 30초</p>
+    <img class="guide guide--sm" src="/characters/mpas.webp" alt="" aria-hidden="true" width="374" height="440" decoding="async">
     <div class="prompt-box"><p class="q">이 문장을 소리 내어 읽어줘</p><p class="s" id="prompt-sentence">—</p>
       <button class="mini" id="re-pick" type="button">다른 문장으로</button></div>
     <p class="hint">내용은 상관없어 — <b>목소리만</b> 들어. 편하게 한 문장 읽으면 돼. (녹음은 저장 안 해)</p>
@@ -151,8 +188,10 @@
   </section>
 
   <section id="s-analyzing" class="screen">
-    <div class="card"><div class="spin"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
-    <p style="text-align:center;color:var(--ink-2);margin:0">네 목소리 색을 찾는 중…</p></div>
+    <div class="card">
+    <img class="guide" src="/characters/mins.webp" alt="" aria-hidden="true" width="312" height="440" decoding="async">
+    <div class="spin"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+    <p style="text-align:center;color:var(--ink-2);margin:0">녹음한 목소리에서 색을 찾는 중…</p></div>
   </section>
 
   <section id="s-result" class="screen">
@@ -162,20 +201,24 @@
       <span class="axis" id="r-axis">—</span>
       <p class="series" id="r-series">—</p>
       <p class="catch" id="r-catch">—</p>
+      <!-- 격자를 이름 바로 밑에 둔다 — "그래서 16색 중 어디냐"가 결과의 첫 질문이다 -->
+      <div class="grid-wrap"><div class="grid grid--mine" id="r-grid"></div>
+        <p class="grid-legend" id="r-where">—</p></div>
       <p class="desc" id="r-desc">—</p>
-      <p class="shine-label">이런 자리에서 빛나</p>
+      <p class="shine-label">이런 결이 자주 쓰이는 자리</p>
       <div class="chips" id="r-chips"></div>
       <p class="spoon" id="r-spoon"></p>
-      <div style="height:16px"></div>
-      <div class="caption"><b>공유 캡션</b> · <span id="r-caption">—</span>
-        <button class="mini" id="r-copy" type="button">복사</button></div>
       <hr class="divider">
-      <p class="bridge">색은 타고난 것. 그 색으로 무슨 생각을 실을지는 연습이야.</p>
+      <p class="bridge">색에 좋고 나쁨은 없어. 그 색으로 무슨 생각을 실을지는 연습이고.</p>
       <a class="btn" id="cta" href="https://acttub.com/?utm_source=voice-color&utm_medium=result_card&utm_campaign=voice2act" target="_blank" rel="noopener">acttub에서 무료로 질문 연습 시작 →</a>
     </div>
     <div style="height:14px"></div>
     <button class="btn second" id="r-save">카드 공유하기</button>
     <button class="btn ghost" id="r-again">다시 하기</button>
+    <!-- 캡션은 정체성이 아니라 공유 도구라 카드 밖으로 뺐다.
+         버튼 두 개 사이에 끼우면 짝이 갈라져 보여서 아래에 둔다. -->
+    <div class="caption"><b>공유 캡션</b> · <span id="r-caption">—</span>
+      <button class="mini" id="r-copy" type="button">복사</button></div>
 
     <div class="ask" id="ask-face">
       <p class="ask__q">이거 하는 동안 얼굴이나 외모가 신경 쓰였어?</p>
@@ -201,10 +244,10 @@ var SERIES = {
     desc:"낮고 부드러워서, 곁에 있으면 왠지 안심되는 나무 같은 목소리야.",
     chips:["기댈 곳이 되는 어른 역","다큐 내레이션","중심을 잡아주는 조연"],
     caption:"내 목소리는 #오크 🪵 깊고 든든한 저음이래. 너는?"},
-  bronze:{emoji:"🥉",axis:"저음 · 또렷한",name:"브론즈 · Bronze",catch:"낮은데 또렷하게 새겨지는 목소리",
+  bronze:{emoji:"🎺",axis:"저음 · 또렷한",name:"브론즈 · Bronze",catch:"낮은데 또렷하게 새겨지는 목소리",
     desc:"저음인데 발음이 선명해서, 한 마디 한 마디가 무게 있게 박혀.",
     chips:["신뢰가 필요한 리더 역","광고 보이스","선언하는 대사"],
-    caption:"내 목소리는 #브론즈 🥉 낮고 또렷하게 새겨진대. 너는?"},
+    caption:"내 목소리는 #브론즈 🎺 낮고 또렷하게 새겨진대. 너는?"},
   noir:{emoji:"🖤",axis:"저음 · 서늘한",name:"느와르 · Noir",catch:"첫 마디에 공기가 바뀌는 목소리",
     desc:"낮고 단단하고 서늘해서, 입을 여는 순간 장면의 온도를 네가 정해.",
     chips:["카리스마가 필요한 씬","미스터리·느와르","긴장의 중심"],
@@ -241,7 +284,7 @@ var SERIES = {
     caption:"내 목소리는 #소다 🥤 톡 튀며 시원하대. 너는?"},
   mint:{emoji:"🌿",axis:"중고음 · 서늘한",name:"민트 · Mint",catch:"산뜻하고 깔끔하게 정리되는 목소리",
     desc:"밝은데 서늘해서, 군더더기 없이 깔끔하게 떨어지는 인상을 줘.",
-    chips:["똑똑한 청춘 역","정보 전달","쿨한 매력의 캐릭터"],
+    chips:["똑똑한 청춘 역","정보 전달","담백하게 끊어 치는 대사"],
     caption:"내 목소리는 #민트 🌿 산뜻하고 깔끔하대. 너는?"},
   // 고음
   sunshine:{emoji:"☀️",axis:"고음 · 따뜻한",name:"선샤인 · Sunshine",catch:"듣기만 해도 환해지는 목소리",
@@ -296,6 +339,52 @@ function pickSentence(){
   if(SENTENCES.length<2) return SENTENCES[0];
   var s; do { s=SENTENCES[Math.floor(Math.random()*SENTENCES.length)]; } while(s===lastSentence);
   lastSentence=s; return s;
+}
+// 16색 격자 — 행=톤(낮은음→높은음), 열=질감. SERIES의 axis 문자열과 같은 뜻이지만
+// 여기서는 배치를 정하는 것이 목적이라 따로 둔다. 순서를 바꾸면 카드 이미지도 같이 바뀐다.
+var TONES=['저음','중저음','중고음','고음'];
+var TEXTURES=['따뜻','부드러움','또렷','서늘'];
+// 격자 머리글은 짧아야 하고 문장은 자연스러워야 해서 둘을 나눈다 ("따뜻 자리"는 어색하다)
+var TEXTURES_LONG=['따뜻함','부드러움','또렷함','서늘함'];
+var GRID=[
+  ['velvet','oak','bronze','noir'],
+  ['caramel','latte','denim','steel'],
+  ['honey','cotton','soda','mint'],
+  ['sunshine','marshmallow','sparkle','crystal']
+];
+// 색은 이름에서 온다(벨벳=깊은 와인, 오크=나무, 민트=박하…).
+// 열은 왼쪽이 따뜻하고 오른쪽이 서늘하다. 행은 대체로 아래가 밝지만
+// 이름을 우선했기 때문에 휘도가 단조롭게 오르지는 않는다(소다 > 스파클).
+var HUE={
+  velvet:'#7a3b62', oak:'#8b6a45', bronze:'#b08046', noir:'#2b2f38',
+  caramel:'#c98a4b', latte:'#c4a484', denim:'#4a6fa5', steel:'#6e7c8c',
+  honey:'#e0a82e', cotton:'#d9c3b8', soda:'#2fa8d5', mint:'#4ec2a0',
+  sunshine:'#f2bf3c', marshmallow:'#eeb9c8', sparkle:'#b969d4', crystal:'#8fcfe4'
+};
+function findCell(key){
+  for(var r=0;r<4;r++)for(var c=0;c<4;c++) if(GRID[r][c]===key) return {r:r,c:c};
+  return null;
+}
+// activeKey가 없으면 16색을 그냥 펼쳐 보여준다(랜딩용).
+function renderGrid(el,activeKey){
+  // title 속성은 폰에서 뜨지 않는다 — 격자 전체에 읽을 수 있는 이름을 준다
+  var cell=activeKey?findCell(activeKey):null;
+  el.setAttribute('role','img');
+  el.setAttribute('aria-label', cell
+    ? '음높이 4구간 × 목소리 결 4가지로 만든 16색 표. 내 색은 '+SERIES[activeKey].name
+      +', '+TONES[cell.r]+' × '+TEXTURES_LONG[cell.c]+' 자리.'
+    : '음높이 4구간 × 목소리 결 4가지로 만든 16색 표.');
+  var h='<span></span>';
+  for(var c=0;c<4;c++) h+='<span class="grid__col">'+TEXTURES[c]+'</span>';
+  for(var r=0;r<4;r++){
+    h+='<span class="grid__row">'+TONES[r]+'</span>';
+    for(var c2=0;c2<4;c2++){
+      var k=GRID[r][c2];
+      h+='<span class="sw'+(k===activeKey?' on':'')+'" style="--sw:'+HUE[k]+'"'
+       + ' title="'+SERIES[k].name+'"></span>';
+    }
+  }
+  el.innerHTML=h;
 }
 var lastKey=null, lastSpoon="";  // 저장 이미지용 마지막 결과
 var CTA_BASE='https://acttub.com/?utm_source=voice-color&utm_medium=result_card&utm_campaign=voice2act';
@@ -533,6 +622,10 @@ function renderResult(data){
   lastSpoon=spoon;
   document.getElementById('r-spoon').textContent=spoon;
   document.getElementById('r-caption').textContent=s.caption+' → voice.acttub.com';
+  renderGrid(document.getElementById('r-grid'),data.series);
+  var cell=findCell(data.series);
+  document.getElementById('r-where').textContent=
+    cell ? '16색 중 '+TONES[cell.r]+' × '+TEXTURES_LONG[cell.c] : '';
   // 어떤 색이 가입으로 이어지는지 acttub 쪽에서 분해할 수 있게 계열을 UTM에 싣는다
   var cta=document.getElementById('cta');
   cta.href=CTA_BASE+'&utm_content='+encodeURIComponent(data.series);
@@ -572,6 +665,35 @@ function tchips(ctx,arr,x,y,maxW,draw){
   }
   return cy+30;
 }
+// 공유 카드에도 같은 격자를 그린다 — 밖으로 퍼지는 건 이 이미지라,
+// 여기에 내 자리가 없으면 받은 사람은 16색 중 어디인지 모른 채 이름만 본다.
+// cx = 격자의 가로 중심. 왼쪽 정렬로 두면 카드 오른쪽 절반이 비어 보인다.
+function cgrid(ctx,cx,y,draw){
+  var LW=112, S=112, G=16, r, c;
+  var x=Math.round(cx-(LW+4*S+3*G)/2);
+  ctx.font='600 30px '+FONT; ctx.textAlign='center';
+  if(draw){ ctx.fillStyle='#6b7684';
+    for(c=0;c<4;c++) ctx.fillText(TEXTURES[c], x+LW+c*(S+G)+S/2, y); }
+  y+=18;
+  for(r=0;r<4;r++){
+    var cy=y+r*(S+G);
+    if(draw){ ctx.textAlign='right'; ctx.font='600 30px '+FONT; ctx.fillStyle='#6b7684';
+      ctx.fillText(TONES[r], x+LW-16, cy+S/2+8); }
+    for(c=0;c<4;c++){
+      var k=GRID[r][c], cx=x+LW+c*(S+G), on=(k===lastKey);
+      if(!draw) continue;
+      ctx.globalAlpha=on?1:.3;
+      rrect(ctx,cx,cy,S,S,14); ctx.fillStyle=HUE[k]; ctx.fill();
+      ctx.globalAlpha=1;
+      if(on){ rrect(ctx,cx-6,cy-6,S+12,S+12,20);
+        ctx.strokeStyle='#191f28'; ctx.lineWidth=4; ctx.stroke(); }
+    }
+  }
+  ctx.textAlign='left';
+  // tblock은 y를 첫 줄 baseline으로 쓰므로 글자가 y보다 위로 올라간다.
+  // 여백을 넉넉히 주지 않으면 다음 줄이 격자 마지막 행과 물린다.
+  return y+4*S+3*G+52;
+}
 function buildCard(){
   var s=SERIES[lastKey];
   var CW=1080, M=36, PAD=64, ix=M+PAD, maxW=CW-2*M-2*PAD;
@@ -583,13 +705,18 @@ function buildCard(){
     if(draw){ rrect(ctx,ix,y-38,aw+44,54,27); ctx.fillStyle='#e8f3ff'; ctx.fill();
       ctx.fillStyle='#0355f1'; ctx.fillText(s.axis,ix+22,y); } y+=64;
     y=tblock(ctx,s.name,ix,y,maxW,36,'600','#6b7684',48,draw); y+=6;
-    y=tblock(ctx,s.catch,ix,y,maxW,58,'700','#191f28',76,draw); y+=22;
+    y=tblock(ctx,s.catch,ix,y,maxW,58,'700','#191f28',76,draw); y+=30;
+    y=cgrid(ctx,CW/2,y,draw);
+    var cell=findCell(lastKey);
+    if(cell) y=tblock(ctx,'16색 중 '+TONES[cell.r]+' × '+TEXTURES_LONG[cell.c],
+      ix,y,maxW,28,'500','#6b7684',40,draw);
+    y+=28;
     y=tblock(ctx,s.desc,ix,y,maxW,38,'500','#4e5968',58,draw); y+=34;
-    y=tblock(ctx,'이런 자리에서 빛나',ix,y,maxW,29,'600','#6b7684',40,draw); y+=18;
-    y=tchips(ctx,s.chips,ix,y,maxW,draw); y+=6;
+    y=tblock(ctx,'이런 결이 자주 쓰이는 자리',ix,y,maxW,29,'600','#6b7684',40,draw); y+=18;
+    y=tchips(ctx,s.chips,ix,y,maxW,draw); y+=26;   // 칩 다음 줄이 칩에 붙어 겹쳐 보였다
     y=tblock(ctx,lastSpoon,ix,y,maxW,31,'500','#6b7684',46,draw); y+=32;
     if(draw){ ctx.strokeStyle='#e5e8eb'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(ix,y); ctx.lineTo(CW-ix,y); ctx.stroke(); } y+=46;
-    y=tblock(ctx,'색은 타고난 것. 그 색으로 무슨 생각을 실을지는 연습이야.',ix,y,maxW,35,'600','#191f28',52,draw); y+=40;
+    y=tblock(ctx,'색에 좋고 나쁨은 없어. 그 색으로 무슨 생각을 실을지는 연습이고.',ix,y,maxW,35,'600','#191f28',52,draw); y+=40;
     y=tblock(ctx,'acttub · 보이스 컬러',ix,y,maxW,29,'600','#6b7684',40,draw);
     ctx.font='600 28px '+FONT;
     if(draw){ ctx.fillStyle='#0355f1'; ctx.fillText('voice.acttub.com', ix, y+2); }
@@ -717,6 +844,8 @@ var askBtns=document.querySelectorAll('#ask-face [data-ans]');
 for(var ai=0;ai<askBtns.length;ai++){
   askBtns[ai].addEventListener('click',function(){ closeAsk(this.getAttribute('data-ans')); });
 }
+
+renderGrid(document.getElementById('l-grid'),null);   // 랜딩 히어로의 16색 미리보기
 
 // 진입 계측 + 직전 결과 복원 (복원은 result_view로 세지 않는다 — 공유율 분모가 부풀지 않게)
 log('landing_view');
