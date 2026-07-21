@@ -127,7 +127,7 @@
      같은 격자를 랜딩에도 써서 "이걸 찾아준다"를 첫 화면에 먼저 보여준다. */
   /* 폭을 묶지 않으면 칸이 100px까지 커져서 랜딩의 시작 버튼이 접힘선 아래로 밀린다 */
   .grid{display:grid;grid-template-columns:38px repeat(4,1fr);gap:5px;align-items:center;
-    max-width:268px;margin:0 auto}
+    max-width:248px;margin:0 auto}
   .grid__col{font-size:10px;color:var(--ink-2);text-align:center;line-height:1.2;letter-spacing:-.03em}
   .grid__row{font-size:10px;color:var(--ink-2);text-align:right;padding-right:4px;letter-spacing:-.03em}
   .sw{aspect-ratio:1;border-radius:9px;background:var(--sw);border:0;padding:0;
@@ -142,12 +142,30 @@
   .caption{margin-top:16px}
   /* acttub 마스코트 (brand/마스코트/ 정본). 규칙은 그 폴더의 README에 있다.
      핵심 두 가지: 장식이라 스크린리더에서 숨기고(alt=""), 사용자의 결과에 반응시키지 않는다.
-     — 그래서 결과 화면과 녹음 화면에는 두지 않는다. 녹음 중에 얼굴이 보고 있으면
-     "누가 나를 듣고 있다"는 압력이 생겨 낭독이 위축된다. */
+     결과 화면에는 두지 않는다. 녹음 화면에는 대기 상태에만 두고 낭독이 시작되면 치운다
+     — 읽는 동안 얼굴이 남아 있으면 "누가 나를 듣고 있다"는 압력이 된다.
+     오류가 뜬 동안에도 치운다(정본이 오류·재시도 화면을 금지한다). */
   .guide{display:block;margin:0 auto;height:132px;width:auto}
   #s-analyzing .guide{height:190px}
   .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
     clip:rect(0 0 0 0);white-space:nowrap;border:0}
+  /* 마스코트 말풍선 — 마스코트가 장식으로만 서 있으면 있으나 없으나 같아서 한 줄씩 준다.
+     말할 수 있는 자리는 시작 화면과 녹음 대기뿐이다:
+     분석 대기는 DESIGN.md가 기다리는 중 문장을 금지하고,
+     결과 화면은 배우의 결과에 반응하는 게 되어 마스코트 규칙에 걸린다. */
+  .say{display:inline-block;position:relative;background:var(--surface);
+    border:1px solid var(--line);border-radius:20px;padding:10px 14px;
+    font-size:13px;font-weight:500;color:var(--ink-2);line-height:1.5;
+    max-width:260px;word-break:keep-all;box-shadow:var(--shadow)}
+  .say::after{content:"";position:absolute;left:50%;bottom:-7px;transform:translateX(-50%) rotate(45deg);
+    width:12px;height:12px;background:var(--surface);
+    border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .say-wrap{text-align:center;margin:0 0 8px}
+  /* 녹음이 시작되면 마스코트를 치운다 — 낭독하는 동안 얼굴이 남아 있으면 지켜보는 게 된다 */
+  #s-record.rec-on .rec-guide,
+  #s-record.rec-error .rec-guide{display:none}
+  .rec-guide{margin:0 0 16px}
+  .rec-guide .guide{height:104px}
   /* 히어로 — 마스코트를 가운데 세우고 그 아래로 제목·설명·격자가 한 줄기로 내려온다.
      오른쪽 위에 붙여 두면 나중에 덧붙인 스티커처럼 읽힌다. */
   .hero{text-align:center;margin:0 0 16px}
@@ -158,10 +176,10 @@
   /* 마스코트 뒤의 옅은 원 — 캐릭터가 배경에서 뜨지 않게 받쳐준다.
      brand/마스코트/README.md의 아바타 원(채움 #9FD4F5)보다 훨씬 옅게 쓴다.
      여기는 누를 수 있는 아바타가 아니라 배경이라 테두리를 두지 않는다. */
-  .hero__art{position:relative;height:160px;margin:0 0 16px}
-  .hero__art::before{content:"";position:absolute;left:50%;top:24px;transform:translateX(-50%);
-    width:144px;height:144px;border-radius:50%;background:#9fd4f5;opacity:.34}
-  .hero__art .guide{position:relative;height:160px}
+  .hero__art{position:relative;height:136px;margin:0 0 8px}
+  .hero__art::before{content:"";position:absolute;left:50%;top:16px;transform:translateX(-50%);
+    width:120px;height:120px;border-radius:50%;background:#9fd4f5;opacity:.34}
+  .hero__art .guide{position:relative;height:136px}
   /* 작은 폰(아이폰 SE 568px 등)에서 격자를 그대로 두면 시작 버튼이 접힘선 아래로 내려간다.
      1순위 지표가 가입 전환이라 버튼이 먼저 보이는 쪽을 택한다. */
   @media (max-height:680px){
@@ -177,6 +195,9 @@
     #s-landing #go-record{order:2}
     #s-landing .note{order:3}
     #s-landing .grid-wrap{order:4;margin:24px 0 0}
+    /* 녹음 화면에서는 마스코트가 '녹음 시작'을 접힘선 아래로 밀어낸다.
+       작은 화면에서는 주된 동작이 먼저다 — 마스코트는 랜딩에만 남긴다. */
+    #s-record .rec-guide{display:none}
   }
   @media (prefers-reduced-motion:reduce){
     *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;
@@ -188,6 +209,8 @@
 <div class="wrap">
   <section id="s-landing" class="screen on">
     <div class="hero">
+      <!-- 말풍선은 읽히는 내용이라 마스코트 이미지와 달리 숨기지 않는다 -->
+      <p class="say-wrap"><span class="say">평소 말하듯이 편하게 읽으면 돼.</span></p>
       <div class="hero__art">
         <img class="guide" src="/characters/stand.webp" alt="" aria-hidden="true" width="288" height="560" decoding="async">
       </div>
@@ -202,9 +225,14 @@
 
   <section id="s-record" class="screen">
     <p class="step">🎙️ 한 문장 녹음 · 최대 30초</p>
+    <!-- 녹음 대기(빈 상태)에만 둔다. 시작하면 rec-on이 붙어 사라진다. -->
+    <div class="rec-guide">
+      <p class="say-wrap"><span class="say">틀려도 괜찮아. 그대로 이어 읽으면 돼.</span></p>
+      <img class="guide" src="/characters/stand.webp" alt="" aria-hidden="true" width="288" height="560" decoding="async">
+    </div>
     <div class="prompt-box"><p class="q">이 문장을 소리 내어 읽어줘</p><p class="s" id="prompt-sentence">—</p>
       <button class="mini" id="re-pick" type="button">다른 문장으로</button></div>
-    <p class="hint">내용은 상관없어 — <b>목소리만</b> 들어. 편하게 한 문장 읽으면 돼. (녹음은 저장 안 해)</p>
+    <p class="hint">문장 내용은 결과에 반영되지 않아 — <b>목소리만</b> 본다. 편하게 한 문장 읽으면 돼. (녹음은 저장 안 해)</p>
     <div class="timer idle" id="timer">0.0s</div>
     <div class="meter idle" id="meter"><i id="level"></i></div>
     <div style="height:20px"></div>
@@ -502,13 +530,20 @@ function samplePitch(){ if(!analyser)return; analyser.getFloatTimeDomainData(tim
 function drawLevel(){analyser.getFloatTimeDomainData(timeBuf);var r=0;for(var i=0;i<timeBuf.length;i++)r+=timeBuf[i]*timeBuf[i];
   document.getElementById('level').style.width=Math.min(100,Math.sqrt(r/timeBuf.length)*400)+'%';rafId=requestAnimationFrame(drawLevel);}
 
+// 오류 문구는 반드시 이 함수로 쓴다. brand/마스코트/README.md가 오류·재시도·실패 화면에
+// 마스코트를 두는 것을 금지하므로, 문구를 띄우는 순간 마스코트도 같이 치워야 한다.
+// textContent를 직접 건드리면 그 규칙이 조용히 깨진다.
+function setRecError(msg){
+  document.getElementById('rec-err').textContent=msg||'';
+  document.getElementById('s-record').classList.toggle('rec-error',!!msg);
+}
 async function startRecording(){
   if(starting||recording) return;          // 시작 버튼 연타로 세션이 겹치는 걸 막는다
   starting=true;
   var my=++session;
   var tog0=document.getElementById('rec-toggle');
   tog0.disabled=true;                      // 권한 대화상자가 떠 있는 동안 버튼을 잠근다
-  document.getElementById('rec-err').textContent='';
+  setRecError('');
   // AudioContext는 **await 전에** 만든다. iOS는 getUserMedia를 기다리는 사이 사용자 제스처가
   // 끊겨서, 그 뒤에 만든 컨텍스트가 suspended로 시작한다(레벨 미터가 안 움직이고 피치 표본이
   // 0개라 pitchHz가 null이 된다). 클릭의 동기 구간에서 만들어야 살아 있는 채로 시작한다.
@@ -521,7 +556,7 @@ async function startRecording(){
     try{ ctx.close(); }catch(e2){}
     // 떠난 뒤에 도착한 거부는 안 보이는 화면에 쓰지 않는다 — 다음에 들어올 때 남의 오류가 떠 있게 된다
     if(my!==session) return;
-    document.getElementById('rec-err').textContent='마이크를 열 수 없어요. 권한을 허용하고 https나 localhost에서 열어줘.';
+    setRecError('마이크를 열 수 없어요. 권한을 허용하고 https나 localhost에서 열어줘.');
     return;
   }
   starting=false;
@@ -531,13 +566,23 @@ async function startRecording(){
   if(my!==session){ st.getTracks().forEach(function(t){t.stop();}); try{ ctx.close(); }catch(e){}
     tog0.disabled=false; tog0.textContent='녹음 시작'; return; }
   stream=st; audioCtx=ctx; tog0.disabled=false; recSession=my;
-  analyser=audioCtx.createAnalyser();analyser.fftSize=2048;
-  audioCtx.createMediaStreamSource(stream).connect(analyser);
-  timeBuf=new Float32Array(analyser.fftSize); pitches=[];
-  chunks=[];recorder=new MediaRecorder(stream);
-  recorder.ondataavailable=function(e){ if(e.data.size>0) chunks.push(e.data); };
-  recorder.onstop=onRecordingStop;
-  recorder.start();
+  // 낭독하는 동안 마스코트를 치운다 — 얼굴이 남아 있으면 지켜보는 게 된다
+  document.getElementById('s-record').classList.add('rec-on');
+  // 여기서부터는 마이크를 이미 잡은 상태다. MediaRecorder가 없거나 컨테이너를 못 만들면
+  // 예외가 나는데, 그때 정리하지 않으면 마이크가 켜진 채 남고 마스코트도 숨은 채 굳는다.
+  try{
+    analyser=audioCtx.createAnalyser();analyser.fftSize=2048;
+    audioCtx.createMediaStreamSource(stream).connect(analyser);
+    timeBuf=new Float32Array(analyser.fftSize); pitches=[];
+    chunks=[];recorder=new MediaRecorder(stream);
+    recorder.ondataavailable=function(e){ if(e.data.size>0) chunks.push(e.data); };
+    recorder.onstop=onRecordingStop;
+    recorder.start();
+  }catch(e){
+    abortRecording();                 // 트랙·타이머·컨텍스트를 닫고 rec-on도 푼다
+    setRecError('이 브라우저에서는 녹음이 안 되네. 다른 브라우저로 열어줄래?');
+    return;
+  }
   recording=true;elapsed=0;
   var tog=document.getElementById('rec-toggle');
   document.getElementById('timer').classList.remove('idle');
@@ -571,9 +616,10 @@ function abortRecording(){
   if(recorder){ recorder.onstop=null; if(recorder.state!=='inactive')recorder.stop(); recorder=null; }
   chunks=[]; teardown();
   document.getElementById('timer').textContent='0.0s';
-  document.getElementById('rec-err').textContent='';
+  setRecError('');
 }
 function teardown(){
+  document.getElementById('s-record').classList.remove('rec-on');
   if(pitchTimer){clearInterval(pitchTimer);pitchTimer=null;}
   if(recTimer){clearInterval(recTimer);recTimer=null;}
   if(rafId){cancelAnimationFrame(rafId);rafId=null;}
@@ -600,7 +646,7 @@ async function onRecordingStop(){
   teardown();
   // stop()을 누른 직후 뒤로가기로 취소됐으면 여기서 끝낸다 — 버린 녹음이 분석 화면을 띄우면 안 된다
   if(my!==session) return;
-  if(blob.size<2000){ document.getElementById('rec-err').textContent='목소리가 잘 안 잡혔어. 다시 들려줄래?'; document.getElementById('timer').textContent='0.0s'; return; }
+  if(blob.size<2000){ setRecError('목소리가 잘 안 잡혔어. 다시 들려줄래?'); document.getElementById('timer').textContent='0.0s'; return; }
   show('s-analyzing'); log('analyze_start');
   var killer=null, timedOut=false, ctl=null;   // ctl은 지역 — 늦게 끝난 앞 요청이 새 요청을 끊지 않게
   try{
@@ -629,9 +675,9 @@ async function onRecordingStop(){
     log('analyze_fail'); log('analyze_fail_'+(mime.indexOf('mp4')>=0?'mp4':mime.indexOf('webm')>=0?'webm':'etc'));
     if(timedOut) log('analyze_timeout');   // 실패율에서 '느려서 끊긴 것'을 따로 본다
     show('s-record');
-    document.getElementById('rec-err').textContent=timedOut
+    setRecError(timedOut
       ? '분석이 너무 오래 걸려. 잠깐 뒤 다시 해줄래?'
-      : '분석에 실패했어. 잠깐 뒤 다시 해줘.';
+      : '분석에 실패했어. 잠깐 뒤 다시 해줘.');
     document.getElementById('timer').textContent='0.0s';
   }finally{ if(killer) clearTimeout(killer); if(analyzeCtl===ctl) analyzeCtl=null; }
 }
